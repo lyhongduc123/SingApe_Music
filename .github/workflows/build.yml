@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setting up Node and install dependencies
-        uses: ./github/actions/setup-npm
+        uses: ./.github/actions/setup-npm
 
       - name: Setup Expo CLI
         run: npm install -g expo-cli eas-cli

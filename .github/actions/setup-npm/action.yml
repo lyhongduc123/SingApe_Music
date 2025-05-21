@@ -16,8 +16,10 @@ runs:
       with:
         node-version: 20
         cache: "npm"
+
+    - name: "Show Node & NPM version"
+      shell: bash
       run: |
-        echo "Setting up Node.js..."
         echo "Node version: $(node -v)"
         echo "NPM version: $(npm -v)"
     
