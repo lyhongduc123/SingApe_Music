@@ -1,0 +1,29 @@
+name: "Setting up Node and install dependencies"
+description: "Setup Node and install dependencies"
+runs:
+  using: "composite"
+  steps:
+    - name: "Check out repository code"
+      shell: bash
+      uses: actions/checkout@v4
+      run: |
+        echo "Checking out repository code..."
+        echo "Repository code checked out."
+
+    - name: "Setup Node.js"
+      shell: bash
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: "npm"
+      run: |
+        echo "Setting up Node.js..."
+        echo "Node version: $(node -v)"
+        echo "NPM version: $(npm -v)"
+    
+    - name: "Install dependencies"
+      shell: bash
+      run: |
+        echo "Installing dependencies..."
+        npm ci
+        echo "Dependencies installed."

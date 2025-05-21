@@ -1,0 +1,31 @@
+name: Testing and Linting
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setting up Node and install dependencies
+        uses: ./github/actions/setup-npm
+
+      - name: Setup Expo CLI
+        run: npm install -g expo-cli eas-cli
+
+      - name: Run Doctor Checks
+        run: npx expo-doctor@latest
+
+      - name: EAS Build (Android)
+        run: |
+          eas login --token ${{ secrets.EXPO_TOKEN }}
+          eas build --platform android --profile ${{ github.ref_name == 'master' && 'production' || 'preview' }} --non-interactive
+
+      - name: Upload artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SingApe.apk
+          path: dist/
