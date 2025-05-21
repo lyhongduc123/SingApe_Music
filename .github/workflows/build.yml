@@ -1,4 +1,4 @@
-name: Testing and Linting
+name: Build to APK
 on:
   push:
     branches: [master]
@@ -9,6 +9,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
       - name: Setting up Node and install dependencies
         uses: ./.github/actions/setup-npm
 
@@ -21,11 +24,27 @@ jobs:
       - name: EAS Build (Android)
         run: |
           eas login --token ${{ secrets.EXPO_TOKEN }}
-          eas build --platform android --profile ${{ github.ref_name == 'master' && 'production' || 'preview' }} --non-interactive
+          eas build --platform android \
+            --profile ${{ github.ref_name == 'master' && 'production' || 'preview' }} \
+            --non-interactive \
+            --wait \
+            --json > build-info.json
+          echo "Build completed"
 
-      - name: Upload artifact
-        if: success()
+      - name: 🔍 Extract .apk URL from JSON
+        id: extract-url
+        run: |
+          echo "Extracting APK URL..."
+          URL=$(cat build-info.json | jq -r '.[0].artifacts.buildUrl')
+          echo "APK_URL=$URL" >> $GITHUB_ENV
+          echo "URL: $URL"
+
+      - name: Download .apk
+        run: |
+          curl -L $APK_URL -o SingApe.apk
+
+      - name: Upload .apk artifact
         uses: actions/upload-artifact@v4
         with:
           name: SingApe.apk
-          path: dist/
+          path: SingApe.apk

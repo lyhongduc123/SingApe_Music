@@ -4,14 +4,9 @@ runs:
   using: "composite"
   steps:
     - name: "Check out repository code"
-      shell: bash
       uses: actions/checkout@v4
-      run: |
-        echo "Checking out repository code..."
-        echo "Repository code checked out."
 
     - name: "Setup Node.js"
-      shell: bash
       uses: actions/setup-node@v4
       with:
         node-version: 20
