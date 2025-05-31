@@ -1,16 +1,17 @@
 import { useNavigation } from 'expo-router';
 import { Pressable, View, Text, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, LucideIcon } from 'lucide-react-native';
 import clsx from 'clsx';
 import { Icon } from './ui/icon';
-import { Button } from './ui';
+import { Button, HStack } from './ui';
 import { ButtonIcon } from './ui/button';
 import { Heading } from './ui/heading';
 
 type Props = {
   title?: string;
   showBack?: boolean;
+  backIcon?: LucideIcon;
   onBackPress?: () => void;
   centerTitle?: boolean;
   right?: React.ReactNode;
@@ -22,6 +23,7 @@ type Props = {
 export default function CustomHeader({
   title,
   showBack = false,
+  backIcon = ArrowLeft,
   centerTitle = false,
   right,
   titleClassName = 'text-lg font-semibold text-black dark:text-white',
@@ -46,7 +48,7 @@ export default function CustomHeader({
             onPress={() => {navigation.goBack()}}
             className="bg-transparent border-none rounded-full data-[active=true]:bg-background-200 w-12 h-12"
           >
-            <ButtonIcon as={ArrowLeft} size="xxl" className="text-primary-500" />
+            <ButtonIcon as={backIcon} size="xxl" className="text-primary-500" />
           </Button>
           </View>
         ): null}
@@ -57,7 +59,7 @@ export default function CustomHeader({
       </View>
 
       {/* Right */}
-      <View className="w-10 items-end justify-center">{right}</View>
+      <HStack className="items-end justify-center bg-transparent">{right}</HStack>
     </View>
   );
 }

@@ -23,16 +23,16 @@ import {
 } from "@/components/ui/form-control";
 import { ButtonText, Button } from "@/components/ui/button";
 import { AntDesign } from "@expo/vector-icons";
-import { useSelector } from "react-redux";
 import { Center, Input, Modal, Spinner } from "@/components/ui";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Heading } from "@/components/ui/heading";
 import { useAuth } from "@/context/auth";
 import { InputField } from "@/components/ui/input";
-import { supabase } from "../lib/supabase";
+import { useColorScheme } from "nativewind";
+
 
 const header = () => {
-  const isDarkMode = useSelector((state: any) => state.isDarkMode);
+  const isDarkMode = useColorScheme().colorScheme === "dark";
   return (
     <Stack.Screen
       options={{
@@ -85,25 +85,24 @@ export default function Login() {
         return;
       }
 
-      await signIn({
+      setLoading(true);
+      const result = await signIn({
         email: emailRef.current,
         password: passwordRef.current,
       });
+      
+      if (result && result.success) {
+        router.dismissAll();
+        router.replace("/(app)/(tabs)/(songs)");
+      } else {
+        Alert.alert(
+          "Đăng nhập thất bại",
+          "Vui lòng kiểm tra lại thông tin đăng nhập.",
+          [{ text: "Xác nhận" }]
+        );
+      }
+    } finally {
       setLoading(false);
-      router.dismissAll();
-      router.replace("/(app)/(tabs)");
-    } catch (error: any) {
-      console.error(error);
-      Alert.alert(
-        "Đăng nhập thất bại",
-        "Vui lòng kiểm tra lại thông tin đăng nhập.",
-        [
-          {
-            text: "Xác nhận",
-            onPress: () => setLoading(false),
-          },
-        ]
-      );
     }
   }
 

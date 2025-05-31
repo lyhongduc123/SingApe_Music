@@ -306,13 +306,25 @@ export type Database = {
           last_listened_at?: string | null;
         };
         Update: {
-          user_id?: string;
-          song_id?: string;
-          last_listened_at?: string | null;
-        };
-        Relationships: [];
-      };
-      vip_songs: {
+          album_id?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          id?: string
+          title?: string | null
+          track_number?: number | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "songs_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }      
+      users: {
         Row: {
           song_id: string;
         };
@@ -320,11 +332,51 @@ export type Database = {
           song_id: string;
         };
         Update: {
-          song_id?: string;
-        };
-        Relationships: [];
-      };
-    };
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      upload_songs: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          url: string
+          upload_at: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          url: string
+          upload_at?: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          url?: string
+          upload_at?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "upload_songs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+    }
     Views: {
       [_ in never]: never;
     };

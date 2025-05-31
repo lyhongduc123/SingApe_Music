@@ -1,11 +1,18 @@
 import CustomHeader from "@/components/CustomHeader";
-import { FlatList, Pressable, ScrollView, Touchable, View, StyleSheet } from "react-native";
+import {
+  FlatList,
+  Pressable,
+  ScrollView,
+  Touchable,
+  View,
+  StyleSheet,
+} from "react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as MediaLibrary from "expo-media-library";
 import * as FileSystem from "expo-file-system";
 
-import { TrackList } from "@/components/TrackList";
+import { TracksList } from "@/components/TrackList";
 import { Track } from "react-native-track-player";
 import { Actionsheet, HStack, Image, VStack, Text, Box } from "@/components/ui";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
@@ -13,16 +20,22 @@ import { CircleArrowDown, Heart } from "lucide-react-native";
 import { unknownTrackImageSource } from "@/constants/image";
 import { getMusicInfo } from "@/services/metadataService";
 import { Divider } from "@/components/ui/divider";
-import BottomSheet, { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import colors from "tailwindcss/colors";
 import { useColorScheme, vars } from "nativewind";
 import { backgroundColor } from "@/constants/tokens";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { MyTrack } from "@/types/zing.types";
+import { playTrack } from "@/services/playbackService";
 
 export default function Download() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState<Track>();
-  const [tracks, setTracks] = useState<Track[]>([]);
+  const [tracks, setTracks] = useState<MyTrack[]>([]);
   const [hasPermission, setHasPermission] = useState(false);
 
   const bottomSheetRef = useRef<BottomSheetModal>(null);
@@ -49,9 +62,8 @@ export default function Download() {
             album: "Unknown Album",
             url: asset.uri,
           };
-        }
-        );
-
+        });
+        console.log("tracks", tracks);
         setTracks(tracks);
         setIsLoading(false);
       } else {
@@ -59,19 +71,18 @@ export default function Download() {
         console.log("Permission to access media library was denied");
       }
     })();
-    
   }, []);
 
   if (isLoading) {
     return (
-      <SafeAreaView className="bg-background-0 flex-1 items-center justify-center">
+      <SafeAreaView className="bg-transparent flex-1">
+        <LoadingOverlay isUnder={true} />
         <CustomHeader
           title="Đã tải"
           showBack={true}
           centerTitle={false}
           headerClassName="bg-background-0"
         />
-        <LoadingOverlay />
       </SafeAreaView>
     );
   }
@@ -85,13 +96,16 @@ export default function Download() {
           centerTitle={false}
           headerClassName="bg-background-0 dark:bg-background-0"
         />
-        <TrackList
+        <TracksList
+          id="downloaded"
           tracks={tracks}
           scrollEnabled={false}
-          onTrackOptionPress={(track) => {
+          onTrackSelect={playTrack}
+          onTrackOptionPress={(track: MyTrack) => {
             handlePresentModalPress();
             setSelectedTrack(track);
           }}
+          ItemSeparatorComponent={() => <View className="h-3" />}
           className="px-4"
         />
         {/* <TrackActionSheet
@@ -100,7 +114,7 @@ export default function Download() {
           track={selectedTrack as Track}
         /> */}
       </ScrollView>
-      <TrackBottomSheet track={selectedTrack} bottomSheetRef={bottomSheetRef}/>
+      <TrackBottomSheet track={selectedTrack} bottomSheetRef={bottomSheetRef} />
     </SafeAreaView>
   );
 }
@@ -113,19 +127,19 @@ interface TrackBottomSheetProps {
 const TrackBottomSheet = ({ ...props }: TrackBottomSheetProps) => {
   const colorMode = useColorScheme();
 
-  const snapPoints = useMemo(() => ['50%', '90%'], []);
+  const snapPoints = useMemo(() => ["50%", "90%"], []);
 
   const renderBackdrop = useCallback(
-		(backdropprops: any) => (
-			<BottomSheetBackdrop
-				{...backdropprops}
-				disappearsOnIndex={-1}
+    (backdropprops: any) => (
+      <BottomSheetBackdrop
+        {...backdropprops}
+        disappearsOnIndex={-1}
         appearsOnIndex={0}
         pressBehavior="close"
-			/>
-		),
-		[]
-	);
+      />
+    ),
+    []
+  );
 
   return (
     <BottomSheetModal
@@ -134,16 +148,21 @@ const TrackBottomSheet = ({ ...props }: TrackBottomSheetProps) => {
       enablePanDownToClose={true}
       backdropComponent={renderBackdrop}
       enableDynamicSizing={false}
-      backgroundStyle={{ 
-        backgroundColor: colorMode.colorScheme === "dark" ? backgroundColor.dark : backgroundColor.light,
+      backgroundStyle={{
+        backgroundColor:
+          colorMode.colorScheme === "dark"
+            ? backgroundColor.dark
+            : backgroundColor.light,
       }}
     >
-      <BottomSheetView
-        className="p-4"
-      >
-      <HStack>
+      <BottomSheetView className="p-4">
+        <HStack>
           <Image
-            source={props.track?.artwork ? { uri: props.track.artwork } : unknownTrackImageSource}
+            source={
+              props.track?.artwork
+                ? { uri: props.track.artwork }
+                : unknownTrackImageSource
+            }
             className="rounded"
             size="md"
             alt="track artwork"
@@ -158,7 +177,7 @@ const TrackBottomSheet = ({ ...props }: TrackBottomSheetProps) => {
           </VStack>
         </HStack>
         <Box className="w-full my-4">
-          <Divider/>
+          <Divider />
         </Box>
         <VStack space="md" className="w-full">
           <Button onPress={() => {}} size="md" className={buttonStyle}>

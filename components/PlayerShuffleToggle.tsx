@@ -1,19 +1,60 @@
 import { colors } from "@/constants/tokens";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { ComponentProps } from "react";
-import { useTrackPlayerShuffleMode } from "@/hooks/useTrackPlayerShuffleMode";
+import { ComponentProps, useState } from "react";
+import { Pressable } from "react-native";
+import TrackPlayer, { Track } from "react-native-track-player";
 
-type IconProps = Omit<ComponentProps<typeof MaterialCommunityIcons>, "name">;
+export const PlayerShuffleToggle = ({
+  ...iconProps
+}: Omit<ComponentProps<typeof MaterialCommunityIcons>, "name">) => {
+  const [isShuffled, setIsShuffled] = useState(false);
+  const [originalQueue, setOriginalQueue] = useState<Track[]>([]);
 
-export const PlayerShuffleToggle = ({ ...iconProps }: IconProps) => {
-  const { isShuffling, toggleShuffleMode } = useTrackPlayerShuffleMode();
+  const handleShuffle = async () => {
+    const currentQueue = await TrackPlayer.getQueue();
+    const currentTrackIndex = await TrackPlayer.getCurrentTrack();
+    if (currentTrackIndex === null) {
+      console.error("No current track index found");
+      return;
+    }
+    const currentTrack = currentQueue[currentTrackIndex];
+
+    if (isShuffled) {
+      await TrackPlayer.setQueue(originalQueue);
+      const originalIndex = originalQueue.findIndex(
+        (track) => track.id === currentTrack.id
+      );
+      await TrackPlayer.skip(originalIndex);
+      console.log("Shuffle off");
+      setIsShuffled(false);
+    } else {
+      setOriginalQueue(currentQueue);
+
+      const shuffledTracks = [...currentQueue];
+      for (let i = shuffledTracks.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledTracks[i], shuffledTracks[j]] = [
+          shuffledTracks[j],
+          shuffledTracks[i],
+        ];
+      }
+      await TrackPlayer.setQueue(shuffledTracks);
+      const newIndex = shuffledTracks.findIndex(
+        (track) => track.id === currentTrack.id
+      );
+      await TrackPlayer.skip(newIndex);
+      console.log("Shuffle on");
+      setIsShuffled(true);
+    }
+  };
 
   return (
-    <MaterialCommunityIcons
-      name="shuffle"
-      onPress={toggleShuffleMode}
-      color={isShuffling ? colors.blue : colors.icon}
-      {...iconProps}
-    />
+    <Pressable onPress={handleShuffle}>
+      <MaterialCommunityIcons
+        name="shuffle"
+        color={isShuffled ? colors.primary : colors.icon}
+        {...iconProps}
+      />
+    </Pressable>
   );
 };

@@ -31,7 +31,9 @@ export const PlayerControls = ({
 
 export const PlayPauseButton = ({ iconSize = 48 }: PlayerButtonProps) => {
   const { playing } = useIsPlaying();
-
+  TrackPlayer.getState().then((state) => {
+    console.log("🎧 Player state:", state);
+  });
   return (
     <Pressable
       className="flex-1 items-center"

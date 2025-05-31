@@ -6,8 +6,6 @@ import { Center } from "@/components/ui/center";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { router, Stack } from "expo-router";
-import store from "@/store/store";
-import { toggleTheme } from "@/store/slices";
 import { SafeAreaView } from "react-native";
 
 export default function AuthenticateOption() {
@@ -18,10 +16,6 @@ export default function AuthenticateOption() {
   const handleRegister = () => {
     router.push("/register");
     console.log("Sign Up button pressed");
-  };
-  const handleChangeTheme = () => {
-    console.log("Change Theme button pressed");
-    store.dispatch(toggleTheme());
   };
   return (
     <SafeAreaView className="flex-1 bg-background-0 p-4">

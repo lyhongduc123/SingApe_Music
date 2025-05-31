@@ -1,4 +1,4 @@
-import { Button, ButtonText } from "@/components/ui/button";
+import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import {
   View,
   FlatList,
@@ -16,10 +16,11 @@ import {
   Spinner,
   Image,
   Box,
+  Center,
 } from "@/components/ui";
-import { useCallback, useEffect, useState, memo, useMemo } from "react";
+import { useCallback, useEffect, useState, memo, useMemo, useRef } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { TrackList } from "@/components/TrackList";
+import { TracksList } from "@/components/TrackList";
 import { getSongs } from "@/services/apiService";
 import { Track, useActiveTrack } from "react-native-track-player";
 import CustomHeader from "@/components/CustomHeader";
@@ -28,64 +29,46 @@ import { MyTrack, Home, ExtendedTrack } from "@/types/zing.types";
 import { fetchHome } from "@/lib/spotify";
 import { convertZingToTrack } from "@/helpers/convert";
 import { TracksListItem } from "@/components/TrackListItem";
-import { playTrack } from "@/services/playbackService";
-import { getListeningHistory } from "@/services/fileService";
-import { getAllSongs, getSongsByArtistId } from "@/lib/api/song.api";
-import { getAllArtists } from "@/lib/api/artist.api";
-import { Song, Artist } from "@/lib/supabase";
+import {
+  playPlaylist,
+  playTrack,
+  playPlaylistFromIndex,
+  playPlaylistFromTrack,
+  generateTracksListId,
+} from "@/services/playbackService";
+import {
+  addSongToFavorite,
+  checkIfSongInFavorites,
+  getListeningHistory,
+  removeSongFromFavorite,
+} from "@/services/fileService";
+import { getAllSongs, getSongsByArtistId } from "@/lib/api/songs";
+import { getAllArtists } from "@/lib/api/artists";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
-import { getSongMp3Url } from "@/lib/api/storage.api";
-
-// Move playSong function outside of the component so it can be accessed by child components
-const playSong = async (song: Song | MyTrack) => {
-  try {
-    // Show loading or feedback to user could be added here
-
-    // Get the song URL from storage
-    const url = await getSongMp3Url(song.id);
-
-    if (!url) {
-      console.error("Could not get song URL from storage");
-      // Consider showing an error toast/notification here
-      return;
-    }
-
-    // Create a track object with all the necessary information
-    const track: Track = {
-      id: song.id,
-      title: song.title || "Unknown Title",
-      artist:
-        "artist_names" in song
-          ? song.artist_names
-          : "artist" in song
-          ? song.artist
-          : "Unknown Artist",
-      url,
-      artwork:
-        "thumbnail_url" in song
-          ? song.thumbnail_url
-          : "artwork" in song
-          ? song.artwork
-          : "https://via.placeholder.com/400",
-      duration: song.duration || 0,
-    };
-
-    // Play the track
-    await playTrack(track);
-  } catch (error) {
-    console.error("Error playing song:", error);
-    // Show error toast/notification
-  }
-};
+import { MyBottomSheet } from "@/components/bottomSheet/MyBottomSheet";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { Divider } from "@/components/ui/divider";
+import { unknownTrackImageSource } from "@/constants/image";
+import ButtonBottomSheet from "@/components/bottomSheet/ButtonBottomSheet";
+import {
+  CircleArrowDown,
+  CirclePlus,
+  Heart,
+  Search,
+  Share2,
+  UserRoundCheck,
+  Mic,
+} from "lucide-react-native";
+import { AlbumList } from "@/components/AlbumList";
 
 export default function Songs() {
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const haveFloatingPlayer = useActiveTrack();
+  const [tracks, setTracks] = useState<MyTrack[]>([]);
+  const [selectedItem, setSelectedItem] = useState<MyTrack | null>(null);
 
   const [homeData, setHomeData] = useState<{
     tracks: Track[];
     chillSection: MyTrack[];
-    recentSection: Track[];
+    recentSection: MyTrack[];
     top100Section: MyTrack[];
     newReleaseSection: MyTrack[];
     albumHotSection: MyTrack[];
@@ -98,24 +81,26 @@ export default function Songs() {
     albumHotSection: [],
   });
 
+  const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const numCols = 3;
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Data states
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [artists, setArtists] = useState<Artist[]>([]);
+  // const [songs, setSongs] = useState<Song[]>([]);
+  // const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
   const navigation = useNavigation();
 
   // Load data when component mounts
-  useEffect(() => {
-    loadData();
-  }, []);
+  // useEffect(() => {
+  //   loadData();
+  // }, []);
 
   // Function to load data from Supabase
   const loadData = async () => {
@@ -124,17 +109,17 @@ export default function Songs() {
 
       // Fetch songs
       const songsData = await getAllSongs();
-      if (songsData) {
-        setSongs(songsData);
-        console.log(`Loaded ${songsData.length} songs`);
-      }
+      // if (songsData) {
+      //   setSongs(songsData);
+      //   console.log(`Loaded ${songsData.length} songs`);
+      // }
 
       // Fetch artists
       const artistsData = await getAllArtists();
-      if (artistsData) {
-        setArtists(artistsData);
-        console.log(`Loaded ${artistsData.length} artists`);
-      }
+      // if (artistsData) {
+      //   setArtists(artistsData);
+      //   console.log(`Loaded ${artistsData.length} artists`);
+      // }
     } catch (err) {
       console.error("Error loading data:", err);
     } finally {
@@ -142,99 +127,81 @@ export default function Songs() {
     }
   };
 
+  const handleOnOptionsPress = (item: MyTrack) => {
+    handlePresentModalPress();
+    favoriteState();
+    setSelectedItem(item);
+  };
+
   const handleSearch = (text: string) => {
     setSearchQuery(text);
     console.log(text);
   };
 
-  const songsToTracks = (songs: Song[]): Track[] => {
-    if (!songs || songs.length === 0) return [];
+  // const songsToTracks = (songs: Song[]): Track[] => {
+  //   if (!songs || songs.length === 0) return [];
 
-    return songs.map((song) => {
-      const fallbackUrl =
-        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+  //   return songs.map((song) => {
+  //     const fallbackUrl =
+  //       "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
 
-      return {
-        id: song.id,
-        title: song.title || "Unknown Title",
-        artist: "Various Artists",
-        url: song.url || fallbackUrl,
-        artwork: song.thumbnail_url || "https://via.placeholder.com/400",
-        duration: 0,
-      };
-    });
-  };
+  //     return {
+  //       id: song.id,
+  //       title: song.title || "Unknown Title",
+  //       artist: "Various Artists",
+  //       url: song.url || fallbackUrl,
+  //       artwork: song.cover_url || "https://via.placeholder.com/400",
+  //       duration: 0,
+  //     };
+  //   });
+  // };
 
   const fetchSongs = async () => {
     setIsLoading(true);
     try {
-      const myData = await getAllSongs();
-      const tracks = await Promise.all(
-        myData.map(async (song) => {
-          const songUrl = await getSongMp3Url(song.id);
-          return {
-            id: song.id,
-            title: song.title ?? undefined,
-            artist: song.artist_names || "Unknown Artist",
-            // Use a fallback for album name
-            album: "Unknown Album",
-            url: songUrl || "",
-            genre: "", // You can add a genre property to your Song type if needed
-            artwork: song.thumbnail_url || "",
-          } as Track;
-        })
-      );
+      // const myData = await getSongs();
+      // const tracks = myData.map(
+      //   (song) =>
+      //     ({
+      //       id: song.id,
+      //       title: song.title ?? undefined,
+      //       artist: song.song_artists
+      //         .map((sa: any) => sa.artists.name)
+      //         .join(", "),
+      //       album: song.albums?.title ?? undefined,
+      //       url: song.url || "",
+      //       genre: song.song_genres.map((sa: any) => sa.genres.name).join(", "),
+      //       artwork: song.cover_url || "",
+      //     } as Track)
+      // );
 
-      setTracks(tracks);
+      // setTracks(tracks);
 
       const zingData: Home = await fetchHome();
-      // setData(zingData);
-
       const chillSection = zingData?.items.find(
         (item) => item.title === "Chill"
       )?.items;
-      // setChillSection(
-      //   Array.isArray(chillSection) ? await handleData(chillSection) : []
-      // );
 
       const newReleaseSection = zingData?.items.find(
         (item) => item.sectionType === "new-release"
       )?.items;
-      // setNewReleaseSection(
-      //   Array.isArray(newReleaseSection)
-      //     ? await handleData(newReleaseSection)
-      //     : newReleaseSection?.all
-      //     ? await handleData(newReleaseSection.all)
-      //     : []
-      // );
 
-      const recentSection = getListeningHistory();
-      // setRecentSection(
-      //   (await recentSection).map((song) => {
-      //     return song.track;
-      //   })
-      // );
+      const recentSection = await getListeningHistory();
 
       const top100Section = zingData?.items.find(
         (item) => item.sectionId === "h100"
       )?.items;
-      // setTop100Section(
-      //   Array.isArray(top100Section) ? await handleData(top100Section) : []
-      // );
 
       const albumHotSection = zingData?.items.find(
         (item) => item.sectionId === "hAlbum"
       )?.items;
-      // setAlbumHotSection(
-      //   Array.isArray(albumHotSection) ? await handleData(albumHotSection) : []
-      // );
 
       setHomeData({
         tracks,
         chillSection: Array.isArray(chillSection)
           ? await handleData(chillSection)
           : [],
-        recentSection: (await getListeningHistory()).map((song) => song.track),
+        recentSection: recentSection.map((song) => song.track),
         top100Section: Array.isArray(top100Section)
           ? await handleData(top100Section)
           : [],
@@ -247,8 +214,11 @@ export default function Songs() {
           ? await handleData(albumHotSection)
           : [],
       });
+
+      console.log("New Release Section Data:", homeData.newReleaseSection);
     } catch (error) {
-      console.error("Error fetching songs:", error);
+      console.error("", error);
+      setIsError(true);
     } finally {
       setIsLoading(false);
     }
@@ -256,9 +226,14 @@ export default function Songs() {
 
   const handleData = async (data: ExtendedTrack[]) => {
     const tracks = await Promise.all(
-      data.map((song) => {
-        return convertZingToTrack(song);
-      })
+      data
+        .filter(
+          (song: ExtendedTrack) =>
+            !song.streamPrivileges || song.streamPrivileges.includes(1)
+        )
+        .map((song: any) => {
+          return convertZingToTrack(song);
+        })
     );
     return tracks;
   };
@@ -270,14 +245,89 @@ export default function Songs() {
     return () => task.cancel();
   }, []);
 
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const handlePresentModalPress = useCallback(() => {
+    bottomSheetRef.current?.present();
+  }, []);
+  const handleDismissModalPress = useCallback(() => {
+    bottomSheetRef.current?.close();
+  }, []);
+
+  const favoriteState = async () => {
+    if (selectedItem) {
+      const isFavorite = await checkIfSongInFavorites(selectedItem);
+      setIsFavorite(isFavorite);
+    }
+  };
+
+  const handleAddToPlaylistPress = async () => {
+    if (selectedItem) {
+      handleDismissModalPress();
+      router.push({
+        pathname: "/addToPlaylist",
+        params: selectedItem,
+      });
+    }
+  };
+
+  const handleFavoritePress = async () => {
+    if (selectedItem) {
+      try {
+        if (await checkIfSongInFavorites(selectedItem)) {
+          await removeSongFromFavorite(selectedItem);
+        } else {
+          await addSongToFavorite(selectedItem);
+        }
+      } catch (error) {
+        console.error("Error playing playlist:", error);
+      }
+    }
+  };
+
+  const handleDownloadPress = async () => {
+    if (selectedItem) {
+      try {
+      } catch (error) {
+        console.error("Error playing playlist:", error);
+      }
+    }
+  };
+
+  const handleArtistPress = async () => {
+    if (selectedItem) {
+      handleDismissModalPress();
+      console.log("artistId", selectedItem);
+      router.navigate({
+        pathname: `/(app)/(tabs)/(songs)/artists/[id]`,
+        params: {
+          id: selectedItem?.artists[0].alias ?? selectedItem?.artist ?? "",
+        },
+      });
+    }
+  };
+
+  const handleSharePress = async () => {
+    if (selectedItem) {
+      handleDismissModalPress();
+      console.log("Share", selectedItem);
+      // Implement share functionality here
+    }
+  };
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchSongs().then(() => setRefreshing(false));
+    setIsError(false);
+    fetchSongs()
+      .then(() => setRefreshing(false))
+      .catch(() => {
+        setRefreshing(false);
+        setIsError(true);
+      });
   }, []);
 
   const renderRecentSection = () => {
     return (
-      <>
+      <View>
         <HStack className="justify-between items-center pr-4">
           <Heading className={headingStyle}>Gần đây</Heading>
           <Button
@@ -290,76 +340,176 @@ export default function Songs() {
             <ButtonText className="text-primary-500">Xem tất cả</ButtonText>
           </Button>
         </HStack>
-        <TrackList
+        <TracksList
+          id="recent"
           className="px-4 data-[active=true]:no-underline"
           scrollEnabled={false}
-          tracks={homeData.recentSection.slice(0, 3)}
+          ItemSeparatorComponent={() => <View className="h-3" />}
+          tracks={homeData.recentSection.slice(0, 5)}
           onTrackOptionPress={(track) => {
-            console.log("Track pressed:", track);
+            handleOnOptionsPress(track as MyTrack);
           }}
         />
-      </>
+      </View>
     );
   };
 
   const renderTop100Section = () => {
     return (
-      <>
-        <Heading className={headingStyle}>Top 100</Heading>
+      <View>
+        <Heading className={headingStyle}>Tuyển tập top</Heading>
         <Box className="">
           <AlbumList horizontal={true} data={homeData.top100Section} />
         </Box>
-      </>
+      </View>
     );
   };
 
   const recommendSection = () => {
     return (
-      <>
+      <View>
         <Heading className={headingStyle}>Dựa trên sở thích của bạn</Heading>
-        <TrackList
+        <TracksList
+          id="recommend"
           className="px-4"
           scrollEnabled={false}
           tracks={tracks}
+          ItemSeparatorComponent={() => <View className="h-3" />}
           onTrackOptionPress={(track) => {
-            console.log("Track pressed:", track);
+            handleOnOptionsPress(track as MyTrack);
           }}
         />
-      </>
+      </View>
     );
   };
 
   const renderChillSection = () => {
     return (
-      <>
-        <Heading className={headingStyle}>Chill</Heading>
+      <View>
+        <Heading className={headingStyle}>Thư giãn</Heading>
         <Box className="">
           <AlbumList horizontal={true} data={homeData.chillSection} />
         </Box>
-      </>
+      </View>
     );
   };
 
   const renderAlbumHotSection = () => {
     return (
-      <>
+      <View>
         <Heading className={headingStyle}>Album Hot</Heading>
         <Box className="">
           <AlbumList horizontal={true} data={homeData.albumHotSection} />
         </Box>
-      </>
+      </View>
     );
   };
   const renderNewReleaseSection = () => {
     return (
-      <>
+      <View>
         <Heading className={headingStyle}>Mới phát hành</Heading>
         <Box>
-          <ColumnWiseFlatList data={homeData.newReleaseSection || []} />
+          <ColumnWiseFlatList
+            data={homeData.newReleaseSection || []}
+            onTrackOptionPress={(track) => {
+              handleOnOptionsPress(track as MyTrack);
+            }}
+          />
         </Box>
-      </>
+      </View>
     );
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-background-0">
+        <LoadingOverlay isUnder={true} />
+        <CustomHeader
+          title="Khám phá"
+          showBack={false}
+          titleClassName="text-3xl font-bold"
+          headerClassName="bg-background-0 px-4"
+          right={
+            <HStack space="md">
+              <Button
+                variant="link"
+                className="text-sm font-semibold"
+                onPress={() => {
+                  router.navigate("/search" as Href);
+                }}
+              >
+                <ButtonIcon
+                  as={Search}
+                  size="xxl"
+                  className="text-primary-500"
+                />
+              </Button>
+              <Button
+                variant="link"
+                className="text-sm font-semibold"
+                onPress={() => {
+                  router.navigate("/voice" as Href);
+                }}
+              >
+                <ButtonIcon as={Mic} size="xxl" className="text-primary-500" />
+              </Button>
+            </HStack>
+          }
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SafeAreaView className="flex-1 bg-background-0">
+        <CustomHeader
+          title="Khám phá"
+          showBack={false}
+          titleClassName="text-3xl font-bold"
+          headerClassName="bg-background-0 px-4"
+          right={
+            <HStack space="md">
+              <Button
+                variant="link"
+                className="text-sm font-semibold"
+                onPress={() => {
+                  router.navigate("/search" as Href);
+                }}
+              >
+                <ButtonIcon
+                  as={Search}
+                  size="xxl"
+                  className="text-primary-500"
+                />
+              </Button>
+              <Button
+                variant="link"
+                className="text-sm font-semibold"
+                onPress={() => {
+                  router.navigate("/voice" as Href);
+                }}
+              >
+                <ButtonIcon as={Mic} size="xxl" className="text-primary-500" />
+              </Button>
+            </HStack>
+          }
+        />
+        <Center className="flex-1">
+          <Text className="text-center text-red-500">
+            Đã xảy ra lỗi khi tải dữ liệu.
+          </Text>
+          <Button
+            variant="solid"
+            className="rounded-full mt-4"
+            onPress={onRefresh}
+          >
+            <ButtonText className="font-semibold">Thử lại</ButtonText>
+          </Button>
+        </Center>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background-0">
@@ -374,6 +524,32 @@ export default function Songs() {
           showBack={false}
           titleClassName="text-3xl font-bold"
           headerClassName="bg-background-0 px-4"
+          right={
+            <HStack space="md">
+              <Button
+                variant="link"
+                className="text-sm font-semibold"
+                onPress={() => {
+                  router.navigate("/search" as Href);
+                }}
+              >
+                <ButtonIcon
+                  as={Search}
+                  size="xxl"
+                  className="text-primary-500"
+                />
+              </Button>
+              <Button
+                variant="link"
+                className="text-sm font-semibold"
+                onPress={() => {
+                  router.navigate("/voice" as Href);
+                }}
+              >
+                <ButtonIcon as={Mic} size="xxl" className="text-primary-500" />
+              </Button>
+            </HStack>
+          }
         />
         <VStack space="lg">
           {renderAlbumHotSection()}
@@ -383,21 +559,81 @@ export default function Songs() {
           {renderTop100Section()}
           {renderChillSection()}
         </VStack>
+        <MyBottomSheet bottomSheetRef={bottomSheetRef}>
+          <HStack space="md">
+            <Image
+              source={
+                selectedItem?.artwork
+                  ? { uri: selectedItem.artwork }
+                  : unknownTrackImageSource
+              }
+              className="rounded"
+              size="sm"
+              alt="track artwork"
+            />
+            <VStack className="flex-1 pl-2">
+              <Text className="text-xl font-medium text-primary-500">
+                {selectedItem?.title}
+              </Text>
+              <Text className="text-md text-gray-500">
+                {selectedItem?.artist}
+              </Text>
+            </VStack>
+          </HStack>
+          <Box className="w-full my-4">
+            <Divider />
+          </Box>
+          <VStack space="md" className="w-full">
+            <ButtonBottomSheet
+              onPress={handleAddToPlaylistPress}
+              buttonIcon={CirclePlus}
+              buttonText="Thêm vào danh sách phát"
+            />
+            <ButtonBottomSheet
+              onPress={handleFavoritePress}
+              stateChangable={true}
+              fillIcon={isFavorite}
+              buttonIcon={Heart}
+              buttonText="Thêm vào yêu thích"
+            />
+            <ButtonBottomSheet
+              onPress={handleDownloadPress}
+              buttonIcon={CircleArrowDown}
+              buttonText="Tải xuống"
+            />
+            <ButtonBottomSheet
+              onPress={handleArtistPress}
+              buttonIcon={UserRoundCheck}
+              buttonText="Chuyển đến nghệ sĩ"
+            />
+            <ButtonBottomSheet
+              onPress={handleSharePress}
+              buttonIcon={Share2}
+              buttonText="Chia sẻ"
+            />
+          </VStack>
+        </MyBottomSheet>
         <Box className="h-28" />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-interface AlbumListProps {
-  horizontal?: boolean;
+interface ColumnWiseFlatListProps {
   data: MyTrack[];
+  onTrackSelect?: (track: MyTrack) => void;
+  onTrackOptionPress?: (track: MyTrack) => void;
 }
 
-const ColumnWiseFlatList = ({ data }: { data: MyTrack[] }) => {
+const ColumnWiseFlatList = ({
+  data,
+  onTrackOptionPress,
+  onTrackSelect,
+}: ColumnWiseFlatListProps) => {
   const screenWidth = useWindowDimensions().width - 32;
   const snapInterval = screenWidth + 14; // 16 is the width of the separator
-  const numCols = 3;
+  const numCols = 5;
+
   const transformedData = useMemo(() => {
     const columns: MyTrack[][] = [];
     for (let i = 0; i < data.length; i += numCols) {
@@ -405,17 +641,23 @@ const ColumnWiseFlatList = ({ data }: { data: MyTrack[] }) => {
     }
     return columns;
   }, [data]);
-  const Column = memo(({ items }: { items: MyTrack[] }) => (
-    <VStack style={{ width: screenWidth }}>
+
+  const Column = ({ items }: { items: MyTrack[] }) => (
+    <VStack style={{ width: screenWidth }} space="md">
       {items.map((item, i) => (
         <TracksListItem
           key={i}
           track={item}
-          onTrackSelect={(track) => playSong(track as MyTrack)}
+          onTrackSelect={(item: any) => {
+            playPlaylistFromTrack(items, item);
+          }}
+          onRightPress={() => {
+            onTrackOptionPress && onTrackOptionPress(item);
+          }}
         />
       ))}
     </VStack>
-  ));
+  );
   const _renderitem = useCallback(
     ({ item }: any) => <Column items={item} />,
     []
@@ -438,45 +680,6 @@ const ColumnWiseFlatList = ({ data }: { data: MyTrack[] }) => {
       disableIntervalMomentum={true}
       className="flex-grow-0"
     />
-  );
-};
-
-const AlbumList = ({ horizontal, data, ...props }: AlbumListProps) => {
-  return (
-    <FlatList
-      data={data}
-      horizontal={horizontal}
-      showsHorizontalScrollIndicator={false}
-      showsVerticalScrollIndicator={false}
-      ListFooterComponent={<View className="w-4" />}
-      ListHeaderComponent={<View className="w-4" />}
-      ItemSeparatorComponent={() => <View className="w-4" />}
-      keyExtractor={(item) => item.id.toString()}
-      renderItem={({ item }) => <AlbumListItem item={item} />}
-      {...props}
-    />
-  );
-};
-
-const AlbumListItem = ({ item }: { item: MyTrack }) => {
-  return (
-    <Link href={`/albums/${item.id}` as Href}>
-      <VStack className="w-40">
-        <Image
-          source={{ uri: item.artwork }}
-          alt={item.title}
-          className="w-40 h-40 rounded-lg"
-        />
-        <Text
-          className="text-md font-semibold"
-          numberOfLines={2}
-          ellipsizeMode="tail"
-        >
-          {item.title}
-        </Text>
-        <Text className="text-gray-400">{item.sortDescription}</Text>
-      </VStack>
-    </Link>
   );
 };
 

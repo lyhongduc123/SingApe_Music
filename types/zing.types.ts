@@ -9,8 +9,9 @@ export interface Album {
     releaseDate: string;
 }
 
-export interface Artists {
+export interface Artist {
     id: string;
+    encodeId: string;
     name: string;
     link: string;
     spotlight: string;
@@ -19,13 +20,21 @@ export interface Artists {
     thumbnail: string;
     isOA: boolean;
     playlistId: string;
+    totalFollow: number;
+}
+
+export interface Playlist {
+    song: {
+        items: ExtendedTrack[];
+    }
+    artists: Artist[];
 }
 
 export interface ExtendedTrack {
     encodeId: string;
     title: string;
     alias: string;
-    artists: Artists[];
+    artists: Artist[];
     album: Album;
     isWorldWide: boolean;
     thumbnailM: string;
@@ -38,15 +47,28 @@ export interface ExtendedTrack {
     weeklyRanking: number;
     score: number;
     rakingStatus: number;
+    streamingStatus: number;
+    streamPrivileges: number[];
+    datatype?: MyTrackType;
 }
+
+export type MyTrackType = "playlist" | "album" | "track" | "artist" | "mv" | "user" | "unknown";
 
 export interface MyTrack extends Track {
     id: string;
-    score: number;
-    description: string;
-    sortDescription: string;
-    rakingStatus: number;
-    weeklyRanking: number;
+    score?: number;
+    alias?: string;
+    description?: string;
+    sortDescription?: string;
+    rakingStatus?: number;
+    weeklyRanking?: number;
+    createdBy?: string;
+    releaseDate?: string;
+    datatype?: MyTrackType;
+}
+
+export interface MyPlaylist extends MyTrack {
+    tracks: MyTrack[];
 }
 
 export interface RegionChart {
@@ -83,4 +105,29 @@ export interface Home {
             others: ExtendedTrack[];
         };
     }[];
+}
+
+export interface SearchResult {
+    top: ExtendedTrack;
+    artists: Artist[];
+    songs: ExtendedTrack[];
+    playlists: ExtendedTrack[];
+}
+
+export interface ArtistResult {
+    id: string;
+    name: string;
+    link: string;
+    thumbnail: string;
+    thumbnailM: string;
+    totalFollow: number;
+    sections: [
+        {
+            sectionId: string;
+            sectionType: string;
+            title: string;
+            link: string;
+            items: ExtendedTrack[];
+        }
+    ]
 }

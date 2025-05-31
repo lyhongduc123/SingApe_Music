@@ -20,43 +20,56 @@ import { KeyboardAvoidingComponent } from "@/components/KeyboardAvoiding";
 import { FloatingPlayer } from "@/components/FloatingPlayer";
 import { View } from "react-native";
 import { lazy, useEffect } from "react";
+import * as NavigationBar from "expo-navigation-bar";
 import { useColorScheme } from "nativewind";
 
 export default function TabsNavigation() {
   const { session } = useAuth();
-  const {colorScheme} = useColorScheme();
+  const { colorScheme } = useColorScheme();
   if (!session) {
     // router.replace("/(auth)");
   }
 
+  useEffect(() => {
+    const bgColor =
+      colorScheme === "dark" ? backgroundColor.dark : backgroundColor.light;
+  
+    const frame = requestAnimationFrame(() => {
+      NavigationBar.setBackgroundColorAsync(bgColor);
+    });
+  
+    return () => cancelAnimationFrame(frame);
+  }, [colorScheme]);
+
   return (
-    <View style={{ flex: 1 }}>
+    <View className="flex-1 bg-background-0">
       <Tabs
         screenOptions={{
           lazy: true,
           headerShown: false,
           tabBarStyle: {
-            position: "absolute",
             bottom: 0,
             borderTopWidth: 0,
             height: 50,
-            backgroundColor: colorScheme === "dark"
-              ? backgroundColor.dark
-              : backgroundColor.light,
+            backgroundColor:
+              colorScheme === "dark"
+                ? backgroundColor.dark
+                : backgroundColor.light,
           },
           tabBarLabelPosition: "below-icon",
-          tabBarActiveTintColor: colorScheme === "dark"
-            ? iconColor.activeLight
-            : iconColor.activeDark,
-          tabBarInactiveTintColor: colorScheme === "dark"
-            ? iconColor.light
-            : iconColor.dark,
+          tabBarActiveTintColor:
+            colorScheme === "dark"
+              ? iconColor.activeLight
+              : iconColor.activeDark,
+          tabBarInactiveTintColor:
+            colorScheme === "dark" ? iconColor.light : iconColor.dark,
         }}
       >
         <Tabs.Screen
           name="(songs)"
           options={{
             title: "Khám phá",
+            popToTopOnBlur: true,
             tabBarIcon: ({ color }) => <Icon as={Compass} color={color} />,
           }}
         />
@@ -64,6 +77,7 @@ export default function TabsNavigation() {
           name="(library)"
           options={{
             title: "Thư viện",
+            popToTopOnBlur: true,
             tabBarIcon: ({ color }) => <Icon as={Library} color={color} />,
           }}
         />
@@ -90,6 +104,12 @@ export default function TabsNavigation() {
             tabBarIcon: ({ color }) => <Icon as={UserRound} color={color} />,
           }}
         />
+        {/* <Tabs.Screen
+          name="test"
+          options={{
+            href: null,
+          }}
+        /> */}
       </Tabs>
       <FloatingPlayer />
     </View>

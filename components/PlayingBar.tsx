@@ -54,7 +54,6 @@ export default function PlayingBars({
   useEffect(() => {
     if (!running) bars.forEach((bar) => animateReset(bar));
     else bars.forEach((bar, i) => animate(bar, i * 150));
-    console.log('Running:', running);
   }, [running]);
 
   return (

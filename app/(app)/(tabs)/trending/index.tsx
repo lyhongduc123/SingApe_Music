@@ -32,6 +32,7 @@ import {
   Scroll,
 } from "lucide-react-native";
 import { useEffect, useState } from "react";
+import { View } from "react-native";
 import { FlatList, Pressable, ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Track, useActiveTrack, useIsPlaying } from "react-native-track-player";
@@ -189,9 +190,12 @@ const TrendingList = ({ tracks }: TrendingListProps) => {
       initialNumToRender={20}
       maxToRenderPerBatch={20}
       windowSize={10}
+      ItemSeparatorComponent={() => (
+        <View className="h-3 bg-transparent" />
+      )}
       ListFooterComponent={
         visibleCount < (tracks?.length || 0) ? (
-          <Center className="w-full h-10">
+          <Center className="w-full h-10 bg-background-0">
             <Button
               variant="link"
               className="rounded-full"
@@ -202,12 +206,7 @@ const TrendingList = ({ tracks }: TrendingListProps) => {
               <ButtonIcon as={ChevronDown} />
               </VStack>
             </Button>
-                <LinearGradient
-                className="absolute w-full h-10 -z-10"
-              colors={[colors.white, colors.gray[200]]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              />
+  
           </Center>
         ) : (
           <></>
@@ -217,7 +216,7 @@ const TrendingList = ({ tracks }: TrendingListProps) => {
         <HStack className="pr-4 pl-2">
           <Center className="w-14 pr-2">
             <Text className={numberStyle(index + 1)}>{index + 1}</Text>
-            {rankingStyle(track.rakingStatus)}
+            {rankingStyle(track.rakingStatus ?? 0)}
           </Center>
           <Box className="flex-1">
             <TracksListItem

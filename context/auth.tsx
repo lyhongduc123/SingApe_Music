@@ -141,79 +141,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
   };
 
-  //   try {
-  //     const { data, error } = await supabase.auth.signInWithPassword({
-  //       email,
-  //       password,
-  //     });
 
-  //     if (error) throw error;
-
-  //     setSession(data.session);
-
-  //     if (data.user) {
-  //       const profile = await getUserProfile(data.user.id);
-
-  //       setUser({
-  //         id: data.user.id,
-  //         email: data.user.email || "",
-  //         display_name: profile?.display_name,
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Sign-in error:", error);
-  //     setError(error);
-  //     setUser(null);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // Sign up with email, password and display name
-  // const signUp = async ({ email, password, display_name }: SignUpParams) => {
-  //   setLoading(true);
-  //   setError(null);
-
-  //   try {
-  //     // 1. Create the user with Supabase Auth
-  //     const { data, error } = await supabase.auth.signUp({
-  //       email,
-  //       password,
-  //     });
-
-  //     if (error) throw error;
-
-  //     // 2. If successful and we have a user, insert profile data
-  //     if (data.user) {
-  //       // Create a profile record with display_name
-  //       const { error: profileError } = await supabase.from("profiles").insert([
-  //         {
-  //           id: data.user.id,
-  //           display_name,
-  //           email: data.user.email,
-  //           updated_at: new Date().toISOString(),
-  //         },
-  //       ]);
-
-  //       if (profileError) throw profileError;
-
-  //       // If we got a session (auto sign-in is enabled)
-  //       if (data.session) {
-  //         setSession(data.session);
-  //         setUser({
-  //           id: data.user.id,
-  //           email: data.user.email || "",
-  //           display_name: display_name,
-  //         });
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error("Sign-up error:", error);
-  //     setError(error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   // Sign out
   const signOut = async () => {

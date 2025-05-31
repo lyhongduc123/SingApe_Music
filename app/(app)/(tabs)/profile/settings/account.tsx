@@ -11,10 +11,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AccountSettings() {
   const { user } = useAuth();
+  const [username, setUsername] = useState<string>(user?.user_metadata.display_name ?? "");
+  const [email, setEmail] = useState<string>(user?.user_metadata.email ?? "");
 
-  const [editAccount, setEditAccount] = useState(false);
-
-  const handleEditProfile = () => {};
+  
 
   return (
     <SafeAreaView className="flex-1 items-center bg-background-0">

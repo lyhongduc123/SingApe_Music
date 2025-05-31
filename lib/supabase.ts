@@ -27,6 +27,12 @@ export type PlaylistInsert =
 export type PlaylistUpdate =
   Database["public"]["Tables"]["playlists"]["Update"];
 
+export type UploadSong = Database["public"]["Tables"]["upload_songs"]["Row"];
+export type UploadSongInsert =
+  Database["public"]["Tables"]["upload_songs"]["Insert"];
+export type UploadSongUpdate =
+  Database["public"]["Tables"]["upload_songs"]["Update"];
+
 // ... (các type instant khác nếu cần)
 
 const supabaseUrl = (process.env.EXPO_PUBLIC_SUPABASE_URL || "null").trim();

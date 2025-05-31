@@ -2,28 +2,37 @@ import { MovingText } from "../components/MovingText";
 import { PlayerControls } from "../components/PlayerControls";
 import { PlayerProgressBar } from "../components/PlayerProgressbar";
 import { PlayerRepeatToggle } from "../components/PlayerRepeatToggle";
-import { PlayerVolumeBar } from "../components/PlayerVolumeBar";
 import { unknownTrackImageSource } from "@/constants/image";
 import { colors, fontSize } from "@/constants/tokens";
 import { usePlayerBackground } from "@/hooks/usePlayerBackground";
 import { useTrackPlayerFavorite } from "@/hooks/useTrackPlayerFavorite";
 import {
+  AntDesign,
   Feather,
   FontAwesome,
   MaterialCommunityIcons,
+  MaterialIcons,
 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useActiveTrack } from "react-native-track-player";
 import { Box, VStack, HStack, Text, Spinner, Center } from "@/components/ui";
-import { Image, Pressable } from "react-native";
+import { Alert, Image, Pressable, View } from "react-native";
 import { PlayerShuffleToggle } from "@/components/PlayerShuffleToggle";
 import { PlayerShareButton } from "@/components/PlayerShareButton";
 import { router } from "expo-router";
-import { AddToPlaylist } from "@/components/AddToPlaylistModal";
+import { AddToPlaylistButton } from "@/components/AddToPlaylistButton";
+import AudioQualitySwitcher from "@/components/AudioQualitySelector";
+import { downloadSong } from "@/components/DowloadMusic";
+import { KaraokeMode } from "@/components/KaraokeMode";
+import { useState } from "react";
 
 const PlayerScreen = () => {
+  const [showKaraoke, setShowKaraoke] = useState(false);
+
   const activeTrack = useActiveTrack();
+  console.log("Active Track:", activeTrack);
+
   const { imageColors } = usePlayerBackground(
     activeTrack?.artwork ?? unknownTrackImageSource
   );
@@ -32,13 +41,36 @@ const PlayerScreen = () => {
   const { isFavorite, toggleFavorite } = useTrackPlayerFavorite();
 
   if (!activeTrack) {
+    console.log("No active track found");
     return (
       <Center className="flex-1 bg-background">
         <Spinner color="$icon" />
       </Center>
     );
   }
-  console.log("id : " + activeTrack.id);
+
+  console.log("Share button props:", {
+    title: activeTrack.title,
+    artist: activeTrack.artist,
+    image: activeTrack.artwork,
+    url: activeTrack.url,
+  });
+
+  if (showKaraoke) {
+    return (
+      <View className="flex-1 bg-black">
+        <Pressable
+          className="absolute top-0 right-0 p-4 z-50"
+          style={{ marginTop: top }}
+          onPress={() => setShowKaraoke(false)}
+        >
+          <MaterialIcons name="close" size={28} color="white" />
+        </Pressable>
+        <KaraokeMode />
+      </View>
+    );
+  }
+
   return (
     <LinearGradient
       style={{ flex: 1 }}
@@ -79,7 +111,9 @@ const PlayerScreen = () => {
             <VStack className="h-[70px]">
               <HStack className="justify-between items-center">
                 <PlayerShareButton
-                  message={`${activeTrack.artist} - ${activeTrack.title}`}
+                  title={activeTrack.title}
+                  artist={activeTrack.artist}
+                  image={activeTrack.artwork}
                   url={activeTrack.url}
                 />
                 <Center className="flex-1 overflow-hidden">
@@ -116,7 +150,38 @@ const PlayerScreen = () => {
               <PlayerControls style={{ marginTop: 10 }} iconSize={48} />
               <PlayerRepeatToggle size={30} style={{ paddingTop: 10 }} />
             </HStack>
-            <AddToPlaylist />
+
+            <HStack space="4xl" className="items-center justify-center">
+              <AddToPlaylistButton track={activeTrack}></AddToPlaylistButton>
+              <AudioQualitySwitcher
+                qualities={[
+                  {
+                    label: "128Kps",
+                    url: "https://example.com/audio/low-quality.mp3",
+                  },
+                ]}
+              ></AudioQualitySwitcher>
+              <MaterialIcons
+                name="mic"
+                size={30}
+                color="white"
+                onPress={() => setShowKaraoke(true)}
+              />
+              <AntDesign
+                name="download"
+                size={30}
+                color="white"
+                onPress={() => {
+                  const result = downloadSong(
+                    activeTrack.url,
+                    activeTrack.title + ".mp3"
+                  );
+                  if (result !== null) {
+                    Alert.alert("Tải thành công", "Nhạc đã được tải về.");
+                  }
+                }}
+              />
+            </HStack>
           </VStack>
         </VStack>
       </Box>

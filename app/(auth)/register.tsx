@@ -4,7 +4,6 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Link, router } from "expo-router";
 import { Stack } from "expo-router";
-import { useSelector } from "react-redux";
 import {
   FormControl,
   FormControlError,
@@ -30,9 +29,10 @@ import { supabase } from "@/lib/supabase";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Heading } from "@/components/ui/heading";
+import { useColorScheme } from "nativewind";
 
 const header = () => {
-  const isDarkMode = useSelector((state: any) => state.isDarkMode);
+  const isDarkMode = useColorScheme().colorScheme === "dark";
   return (
     <Stack.Screen
       options={{

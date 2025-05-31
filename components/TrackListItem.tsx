@@ -14,7 +14,12 @@ import {
 import { Track, useActiveTrack, useIsPlaying } from "react-native-track-player";
 import { unknownTrackImageSource } from "@/constants/image";
 import PlayingBars from "./PlayingBar";
-import { EllipsisVertical, Option, Play } from "lucide-react-native";
+import {
+  CirclePlus,
+  EllipsisVertical,
+  Option,
+  Play,
+} from "lucide-react-native";
 import { BlurView } from "expo-blur";
 import { iconColor } from "@/constants/tokens";
 import { useSelector } from "react-redux";
@@ -31,13 +36,15 @@ import {
 } from "./ui/actionsheet";
 import { ScrollView } from "react-native-gesture-handler";
 import BottomSheet from "@gorhom/bottom-sheet";
-import { useWindowDimensions } from "react-native";
+import { useWindowDimensions, View } from "react-native";
+import { MyTrack } from "@/types/zing.types";
 
 export type TracksListItemProps = {
-  track: Track;
-  onTrackSelect: (track: Track) => void;
-  onRightPress?: (track: Track) => void;
+  track: MyTrack;
+  onTrackSelect: (track: MyTrack) => void;
+  onRightPress?: (track: MyTrack) => void;
   variant?: variantType;
+  showOptionButton?: boolean;
   children?: React.ReactNode;
 };
 
@@ -48,13 +55,11 @@ export const TracksListItem = ({
   onTrackSelect: handleTrackSelect,
   variant = "playlist",
   onRightPress,
+  showOptionButton = true,
   children,
 }: TracksListItemProps) => {
   const { playing } = useIsPlaying();
-  const isActiveTrack = useActiveTrack()?.url === track.url;
-  const reverseTheme = useSelector((state: any) =>
-    state.isDarkMode ? "light" : "dark"
-  );
+  const isActiveTrack = useActiveTrack()?.id === track.id;
 
   const windowWidth = useWindowDimensions().width - 32;
 
@@ -79,15 +84,16 @@ export const TracksListItem = ({
           source={
             track.artwork ? { uri: track.artwork } : unknownTrackImageSource
           }
-          className={`w-12 h-12 rounded`}
+          className={`rounded`}
+          size="sm"
           alt="track artwork"
         />
 
         {isActiveTrack ? (
-          <>
+          <View>
             <BlurView
               className="absolute w-full h-full"
-              tint={reverseTheme}
+              tint="dark"
               intensity={80}
             />
             {playing ? (
@@ -98,56 +104,59 @@ export const TracksListItem = ({
                 className="absolute text-indigo-500 fill-indigo-500"
               />
             )}
-          </>
+          </View>
         ) : null}
       </Center>
     );
   };
 
-  const handleOptionPress = (track: Track) => {
+  const handleOptionPress = (track: MyTrack) => {
     onRightPress?.(track);
   };
 
   return (
     <Pressable
       onPress={() => handleTrackSelect(track)}
-      className="px-0 py-2 w-full"
+      className="px-0 w-full"
       style={{ maxWidth: windowWidth }}
     >
-      <HStack space="md" className="gap-4 items-center">
+      <HStack space="lg" className="items-center">
         {variantPlaylist()}
         <HStack className="flex-1 items-center justify-between">
-          <VStack className="flex-1">
+          <VStack space="xs" className="flex-1">
             <HStack space="sm">
               {variantAlbum()}
               <Text
                 numberOfLines={1}
                 ellipsizeMode="tail"
-                className={`text-sm font-semibold ${
-                  isActiveTrack ? "text-indigo-500" : "text-foreground"
+                className={`text-lg font-medium ${
+                  isActiveTrack ? "text-indigo-500" : "text-primary-500"
                 }`}
               >
                 {track.title}
               </Text>
             </HStack>
             {track.artist && (
-              <Text numberOfLines={1} className="text-muted text-[14px] mt-1">
+              <Text numberOfLines={1} className="text-gray-500 text-sm">
                 {track.artist}
               </Text>
             )}
           </VStack>
-          <Button
-            variant="solid"
-            className="bg-transparent border-none data-[active=true]:bg-transparent w-5 h-5"
-            size="sm"
-            onPress={() => handleOptionPress(track)}
-          >
-            <ButtonIcon
-              as={EllipsisVertical}
-              size="xl"
-              className="text-primary-500"
-            />
-          </Button>
+          {children}
+          {showOptionButton && (
+            <Button
+              variant="solid"
+              className="bg-transparent border-none data-[active=true]:bg-transparent w-10 h-10"
+              size="sm"
+              onPress={() => handleOptionPress(track)}
+            >
+              <ButtonIcon
+                as={EllipsisVertical}
+                size="xxl"
+                className="text-primary-500"
+              />
+            </Button>
+          )}
         </HStack>
       </HStack>
     </Pressable>

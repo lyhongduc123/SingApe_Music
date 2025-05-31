@@ -1,5 +1,4 @@
 import { Href, router, Stack } from "expo-router";
-import { setTheme, toggleTheme } from "@/store/slices";
 import { VStack, Button, Text, HStack, Box } from "@/components/ui";
 import { Fontisto, MaterialCommunityIcons } from "@expo/vector-icons";
 import {
@@ -34,34 +33,16 @@ import {
   RadioIndicator,
   RadioLabel,
 } from "@/components/ui/radio";
-import store from "@/store/store";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomHeader from "@/components/CustomHeader";
+import { useTheme } from "@/components/ui/ThemeProvider";
 
-const header = () => {
-  const isDarkMode = useSelector((state: any) => state.isDarkMode);
-  return (
-    <Stack.Screen
-      options={{
-        headerTitle: "Cài đặt",
-        headerTitleStyle: {
-          fontSize: fontSize.base,
-        },
-        headerTintColor: 'text-blue-500',
-        headerStyle: {
-          backgroundColor: isDarkMode
-            ? backgroundColor.dark
-            : backgroundColor.light,
-        },
-        headerShadowVisible: false,
-      }}
-    />
-  );
-};
 
 export default function Settings() {
+  const { toggleTheme } = useTheme();
+
   const handleThemeChange = () => {
-    store.dispatch(toggleTheme());
+    toggleTheme();
   }
 
   const settingsOptions = [

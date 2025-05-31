@@ -10,7 +10,6 @@ import { useSelector } from "react-redux";
 import { fontSize, iconSize } from "@/constants/tokens";
 import { ButtonIcon, ButtonText } from "@/components/ui/button";
 import { useAuth } from "@/context/auth";
-import { VirtualHeader } from "@/components/VirtualHeader";
 import { BellIcon, Icon } from "@/components/ui/icon";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomHeader from "@/components/CustomHeader";
@@ -65,56 +64,59 @@ export default function Profile() {
 
   return (
     <SafeAreaView className="flex-1 bg-background-0">
-    <VStack className="flex-1 bg-background-0">
-      <CustomHeader
-        title="Cá nhân"
-        showBack={false}
-        titleClassName="text-4xl font-bold"
-        headerClassName="px-4"
-      />
-      <HStack className="p-4">
-        <Avatar size="xl" className="border">
-          <AvatarFallbackText>Lucas</AvatarFallbackText>
-          <AvatarImage
-            source={{
-              uri: user?.user_metadata.avatar_url ?? "https://ui-avatars.com/api/?length=1&name=" + user?.user_metadata.display_name,
-            }}
-          />
-        </Avatar>
-        <VStack className="pl-4 gap-1">
-          <Text className="text-2xl font-bold pt-2">
-            {user?.user_metadata.display_name}
-          </Text>
-          <HStack className="w-fit justify-center items-center gap-2 bg-info-50 text-info-800 px-2 py-1 rounded-2xl shadow-md border border-info-200">
-            <Icon
-              as={CrownIcon}
-              className="text-tertiary-500 fill-tertiary-500"
+      <VStack className="flex-1">
+        <CustomHeader
+          title="Cá nhân"
+          showBack={false}
+          titleClassName="text-4xl font-bold"
+          headerClassName="px-4"
+        />
+        <HStack className="p-4">
+          <Avatar size="xl" className="border">
+            <AvatarFallbackText>Lucas</AvatarFallbackText>
+            <AvatarImage
+              source={{
+                uri:
+                  user?.user_metadata.avatar_url ??
+                  "https://ui-avatars.com/api/?length=1&bold=true&background=f76806&name=" +
+                    user?.user_metadata.display_name,
+              }}
             />
-            <Text className="text-xl">Premium</Text>
-          </HStack>
+          </Avatar>
+          <VStack className="pl-4 gap-1">
+            <Text className="text-2xl font-bold pt-2">
+              {user?.user_metadata.display_name}
+            </Text>
+            <HStack className="w-fit justify-center items-center gap-2 bg-info-50 text-info-800 px-2 py-1 rounded-2xl shadow-md border border-info-200">
+              <Icon
+                as={CrownIcon}
+                className="text-tertiary-500 fill-tertiary-500"
+              />
+              <Text className="text-xl">Premium</Text>
+            </HStack>
+          </VStack>
+        </HStack>
+        <VStack className="flex-1 px-2 pt-2 space-y-2">
+          <Button
+            onPress={handleSetting}
+            variant="solid"
+            action="secondary"
+            className="w-full bg-transparent justify-start mb-2 data-[active=true]:bg-background-200"
+          >
+            <ButtonIcon className="text-primary-500" as={Settings} />
+            <ButtonText>Cài đặt</ButtonText>
+          </Button>
+          <Button
+            onPress={handleSignOut}
+            variant="solid"
+            action="secondary"
+            className="w-full bg-transparent justify-start mb-2 data-[active=true]:bg-background-200"
+          >
+            <ButtonIcon className="text-primary-500" as={LogOut} />
+            <ButtonText>Đăng xuất</ButtonText>
+          </Button>
         </VStack>
-      </HStack>
-      <VStack className="flex-1 px-2 pt-2 space-y-2">
-        <Button
-          onPress={handleSetting}
-          variant="solid"
-          action="secondary"
-          className="w-full bg-transparent justify-start mb-2 data-[active=true]:bg-background-200"
-        >
-          <ButtonIcon className="text-primary-500" as={Settings} />
-          <ButtonText>Cài đặt</ButtonText>
-        </Button>
-        <Button
-          onPress={handleSignOut}
-          variant="solid"
-          action="secondary"
-          className="w-full bg-transparent justify-start mb-2 data-[active=true]:bg-background-200"
-        >
-          <ButtonIcon className="text-primary-500" as={LogOut} />
-          <ButtonText>Đăng xuất</ButtonText>
-        </Button>
       </VStack>
-    </VStack>
     </SafeAreaView>
   );
 }

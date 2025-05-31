@@ -1,11 +1,11 @@
 import { useAuth } from "@/context/auth";
 import { supabase } from "@/lib/supabase";
 import { Redirect, router } from "expo-router";
-import React, { useEffect } from "react";
+import React from "react";
 
-export default function App() {
+const App = () => {
   const { setSession, setUser } = useAuth();
-  useEffect(() => {
+  React.useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       if (data.session) {
@@ -36,4 +36,8 @@ export default function App() {
       subscription.unsubscribe();
     };
   }, []);
-}
+
+  return null;
+};
+
+export default App;

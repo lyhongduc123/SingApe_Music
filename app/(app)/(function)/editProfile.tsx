@@ -8,15 +8,15 @@ import { useAuth } from "@/context/auth";
 import { supabase } from "@/lib/supabase";
 import { router, Stack } from "expo-router";
 import { Info, X } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditProfile() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
 
   const [modalVisible, setModalVisible] = useState(false);
-  const [name, setName] = useState(user?.user_metadata.display_name || "");
-  const [email, setEmail] = useState(user?.email || "");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
 
   const handleEditProfile = () => {
     if (!name || !email) {
@@ -44,8 +44,24 @@ export default function EditProfile() {
         }
       });
     
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUser(user);
+      } else {
+        console.error("Failed to retrieve user");
+      }
+    });
+    
     router.back();
   };
+
+  useEffect(() => {
+    if (user) {
+      setName(user.user_metadata.display_name || "");
+      setEmail(user.user_metadata.email || "");
+    }
+  }
+  , [user]);
 
   return (
     <SafeAreaView className="flex-1 bg-background-0">

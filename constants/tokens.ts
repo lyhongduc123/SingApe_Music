@@ -1,3 +1,5 @@
+import { rgbToHex } from "@/helpers/color";
+
 export const fontSize = {
     xs: 12,
     sm: 16,
@@ -29,8 +31,10 @@ export const iconColor = {
 };
 
 export const backgroundColor = {
-    light: "#f6f6f6", 
-    dark: "#272625",
+    light: rgbToHex(255, 255, 255),
+    dark: rgbToHex(18, 18, 18),
+    minDark: rgbToHex(39, 38, 37),
+    minLight: rgbToHex(255, 255, 255),
     white: "#ffffff",
     black: "#000000",
 };
