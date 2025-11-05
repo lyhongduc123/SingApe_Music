@@ -58,3 +58,5 @@ npx expo run android
 
 ### 5.Demo
 Truy cập đường dẫn https://drive.google.com/file/d/1I1XG6FSnjPnaHV5Ps4QBkOW133LmICql/view?usp=drive_link
+
+Cập nhật cuối 06/11/2025
