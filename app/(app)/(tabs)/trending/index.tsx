@@ -19,7 +19,8 @@ import { unknownTrackImageSource } from "@/constants/image";
 import { iconColor } from "@/constants/tokens";
 import { convertZingToTrack } from "@/helpers/convert";
 import { fetchChart, fetchSong, fetchTop100Tracks } from "@/lib/spotify";
-import { playTrack } from "@/services/playbackService";
+import { playPlaylistFromTrack, playTrack } from "@/services/playbackService";
+import { useQueueStore } from "@/store/queue";
 import { Chart, ExtendedTrack, MyTrack, RegionChart } from "@/types/zing.types";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -130,18 +131,11 @@ interface TrendingListProps {
 
 const TrendingList = ({ tracks }: TrendingListProps) => {
   const [visibleCount, setVisibleCount] = useState(20);
-
+  const queue = useQueueStore();
   const visibleTracks = tracks?.slice(0, visibleCount) || [];
 
   const onTrackSelect = async (track: Track) => {
-    const { url } = await fetchSong(track.id);
-    if (url) {
-      track.url = url;
-      console.log("Track URL:", url);
-      playTrack(track);
-    } else {
-      console.error("Error fetching song URL:", url);
-    }
+    playTrack(track);
   };
 
   const numberStyle = (index: number) => {
@@ -221,7 +215,7 @@ const TrendingList = ({ tracks }: TrendingListProps) => {
           <Box className="flex-1">
             <TracksListItem
               track={track}
-              onTrackSelect={() => onTrackSelect(track)}
+              onTrackSelect={onTrackSelect}
             />
           </Box>
         </HStack>

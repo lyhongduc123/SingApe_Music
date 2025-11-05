@@ -30,7 +30,6 @@ import { useAuth } from "@/context/auth";
 import { InputField } from "@/components/ui/input";
 import { useColorScheme } from "nativewind";
 
-
 const header = () => {
   const isDarkMode = useColorScheme().colorScheme === "dark";
   return (
@@ -85,22 +84,25 @@ export default function Login() {
         return;
       }
 
-      setLoading(true);
-      const result = await signIn({
+      await signIn({
         email: emailRef.current,
         password: passwordRef.current,
       });
-      
-      if (result && result.success) {
-        router.dismissAll();
-        router.replace("/(app)/(tabs)/(songs)");
-      } else {
-        Alert.alert(
-          "Đăng nhập thất bại",
-          "Vui lòng kiểm tra lại thông tin đăng nhập.",
-          [{ text: "Xác nhận" }]
-        );
-      }
+      setLoading(false);
+      router.dismissAll();
+      router.replace("/(app)/(tabs)/(songs)");
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert(
+        "Đăng nhập thất bại",
+        "Vui lòng kiểm tra lại thông tin đăng nhập.",
+        [
+          {
+            text: "Xác nhận",
+            onPress: () => setLoading(false),
+          },
+        ]
+      );
     } finally {
       setLoading(false);
     }
@@ -188,7 +190,7 @@ export default function Login() {
               variant="outline"
               className="mt-2 w-full data-[active=true]:bg-background-300"
             >
-              <ButtonText>Đăng ký với Google</ButtonText>
+              <ButtonText>Đăng nhập với Google</ButtonText>
               <AntDesign
                 name="googleplus"
                 size={24}

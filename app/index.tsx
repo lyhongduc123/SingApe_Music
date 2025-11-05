@@ -1,12 +1,15 @@
 import { useAuth } from "@/context/auth";
 import { supabase } from "@/lib/supabase";
-import { Redirect, router } from "expo-router";
+import { useEffect } from "react";
+import { Redirect, router, useRootNavigationState } from "expo-router";
 import React from "react";
 import { sendTestNotification } from "../services/pushNotificationService";
 
-const App = () => {
+export default function App() {
   const { setSession, setUser } = useAuth();
-  React.useEffect(() => {
+  useEffect(() => {
+
+    // Check if the user is already authenticated
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       if (data.session) {
@@ -37,12 +40,4 @@ const App = () => {
       subscription.unsubscribe();
     };
   }, []);
-
-  React.useEffect(() => {
-    sendTestNotification();
-  }, []);
-
-  return null;
 };
-
-export default App;

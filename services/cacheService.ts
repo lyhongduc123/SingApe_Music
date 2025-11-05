@@ -62,7 +62,8 @@ export async function saveToLibrary(uri: string, albumName = "MyMusic") {
 }
 
 export async function saveListeningHistory(track: MyTrack) {
-  const historyFileUri = HISTORY_FILE;
+  const { user } = useAuth();
+  const historyFileUri = HISTORY_FILE + (user?.id ? `_${user.id}/` : '');
   let history = [];
 
   try {
@@ -83,7 +84,7 @@ export async function getListeningHistory(): Promise<
   try {
     const fileInfo = await FileSystem.getInfoAsync(HISTORY_FILE);
     if (!fileInfo.exists) return [];
-    const raw = await FileSystem.readAsStringAsync(HISTORY_FILE, {
+    const raw = await FileSystem.readAsStringAsync(historyFileUri, {
       encoding: FileSystem.EncodingType.UTF8,
     });
     return JSON.parse(raw);
@@ -94,12 +95,14 @@ export async function getListeningHistory(): Promise<
 }
 
 export async function deleteListeningHistory(trackId: string) {
+  const { user } = useAuth();
+  const historyFileUri = HISTORY_FILE + (user?.id ? `_${user.id}/` : '');
   const fileInfo = await FileSystem.getInfoAsync(HISTORY_FILE);
   if (fileInfo.exists) {
     let history = [];
 
     try {
-      const fileContent = await FileSystem.readAsStringAsync(HISTORY_FILE);
+      const fileContent = await FileSystem.readAsStringAsync(historyFileUri);
       history = JSON.parse(fileContent);
     } catch (error) {
       console.log("Cant read history file.");
@@ -116,9 +119,11 @@ export async function deleteListeningHistory(trackId: string) {
 }
 
 export async function clearListeningHistory() {
+  const { user } = useAuth();
+  const historyFileUri = HISTORY_FILE + (user?.id ? `_${user.id}/` : '');
   const fileInfo = await FileSystem.getInfoAsync(HISTORY_FILE);
   if (fileInfo.exists) {
-    await FileSystem.writeAsStringAsync(HISTORY_FILE, JSON.stringify([]));
+    await FileSystem.writeAsStringAsync(historyFileUri, JSON.stringify([]));
   }
 }
 

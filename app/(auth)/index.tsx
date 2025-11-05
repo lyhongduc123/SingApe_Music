@@ -35,20 +35,22 @@ export default function AuthenticateOption() {
         Tạo playlist và chia sẻ với bạn bè
       </Text>
     </VStack>
-    <VStack space="md" className="bg-none w-full p-4 bottom-10">
+    <VStack space="md" className="bg-none p-4 bottom-10 items-center w-full">
         <Button
           onPress={handleRegister}
           variant="solid"
           action="positive"
-          className="mb-2"
+          className="mb-2 rounded-full w-full"
+          size="xl"
         >
           <ButtonText>Đăng ký</ButtonText>
         </Button>
         <Button
           onPress={handleLogin}
-          className="mb-2 data-[active=true]:bg-background-300"
+          className="mb-2 data-[active=true]:bg-background-300 rounded-full w-full"
           variant="outline"
           action="primary"
+          size="xl"
         >
           <ButtonText>Đăng nhập</ButtonText>
         </Button>

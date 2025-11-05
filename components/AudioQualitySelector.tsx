@@ -39,8 +39,8 @@ const AudioQualitySwitcher: React.FC<Props> = ({ qualities }) => {
 
   return (
     <VStack className="p-4">
-      <TouchableOpacity onPress={handlePress}>
-        <Text className="text-white text-2xl">{currentQuality.label}</Text>
+      <TouchableOpacity onPress={handlePress} className="bg-primary-500 rounded-full px-2">
+        <Text className="text-white text-xl">{currentQuality.label}</Text>
       </TouchableOpacity>
     </VStack>
   );

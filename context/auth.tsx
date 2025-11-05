@@ -79,19 +79,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
       });
       if (error) {
         setError(error as any);
-        return;
+        throw error; // Re-throw the error to be caught by the caller
       }
       if (!data.session) {
         setError({
           name: "AuthSessionMissing",
           message: "No session returned from sign in",
         } as any);
-        return;
+        throw new Error("No session returned from sign in");
       }
       setSession(data.session);
       setUser(data.session.user);
     } catch (error) {
       console.log("Sign-in error:", error);
+      throw error; // Re-throw the error to be caught by the caller
       setError({
         name: "AuthUnknown",
         message: "Unknown error during sign in",
@@ -119,19 +120,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
       if (error) {
         setError(error as any);
-        return;
+        throw error; // Re-throw the error to be caught by the caller
       }
       if (!session) {
         setError({
           name: "AuthSessionMissing",
           message: "No session returned from sign up",
         } as any);
-        return;
+        throw new Error("No session returned from sign up");
       }
       setSession(session);
       setUser(session.user);
     } catch (error) {
       console.log("Sign-up error:", error);
+      throw error; // Re-throw the error to be caught by the caller
       setError({
         name: "AuthUnknown",
         message: "Unknown error during sign up",
