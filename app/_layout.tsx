@@ -24,6 +24,7 @@ import { AlertProvider } from "@/context/alert";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { backgroundColor } from "@/constants/tokens";
+// import { sendTestNotification } from "@/services/pushNotificationService";
 
 SplashScreen.preventAutoHideAsync();
 TrackPlayer.registerPlaybackService(() => playbackService);
@@ -55,6 +56,8 @@ export default function RootLayout() {
         router.replace("/player"); // or "/track/[id]" if needed
       }
     };
+
+    // sendTestNotification();
 
     const subscription = Linking.addEventListener("url", handleDeepLink);
 

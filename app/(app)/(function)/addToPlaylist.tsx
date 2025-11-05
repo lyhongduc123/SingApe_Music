@@ -43,6 +43,7 @@ export default function ListPlaylist() {
 
   const [selected, setSelected] = useState<string[]>([]);
   const [initSelected, setInitSelected] = useState<string[]>([]);
+  const store = useLibraryStore((state) => state.playlists);
 
   const toggleSelect = (id: string) => {
     const isSelected = selected.includes(id);
@@ -112,7 +113,7 @@ export default function ListPlaylist() {
     };
 
     fetchAlbum();
-  }, []);
+  }, [store]);
 
   return (
     <SafeAreaView className="bg-background-0 flex-1">

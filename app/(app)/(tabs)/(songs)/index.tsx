@@ -219,7 +219,7 @@ export default function Songs() {
         newReleaseSection: Array.isArray(newReleaseSection)
           ? await handleData(newReleaseSection)
           : newReleaseSection?.all
-          ? await handleData(newReleaseSection.all)
+          ? await handleData(newReleaseSection.all.slice(0, 5))
           : [],
         albumHotSection: Array.isArray(albumHotSection)
           ? await handleData(albumHotSection)
@@ -424,11 +424,30 @@ export default function Songs() {
       <View>
         <Heading className={headingStyle}>Mới phát hành</Heading>
         <Box>
-          <ColumnWiseFlatList
+          {/* <ColumnWiseFlatList
             data={homeData.newReleaseSection || []}
             onTrackOptionPress={(track) => {
               handleOnOptionsPress(track as MyTrack);
             }}
+          /> */}
+          <FlatList
+            data={homeData.newReleaseSection}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TracksListItem
+                track={item}
+                onTrackSelect={(track: MyTrack) => {
+                  playTrack(track);
+                }}
+                onRightPress={() => {
+                  handleOnOptionsPress(item);
+                }}
+              />
+            )}
+            showsVerticalScrollIndicator={false}
+            className="px-4"
+            scrollEnabled={false}
+            ItemSeparatorComponent={() => <View className="h-3" />}
           />
         </Box>
       </View>
@@ -660,18 +679,24 @@ const ColumnWiseFlatList = ({
 
   const Column = ({ items }: { items: MyTrack[] }) => (
     <VStack style={{ width: screenWidth }} space="md">
-      {items.map((item, i) => (
-        <TracksListItem
-          key={i}
-          track={item}
-          onTrackSelect={(item: any) => {
-            playPlaylistFromTrack(items, item);
-          }}
-          onRightPress={() => {
-            onTrackOptionPress && onTrackOptionPress(item);
-          }}
-        />
-      ))}
+      <FlatList
+        data={items}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TracksListItem
+            track={item}
+            onTrackSelect={(item: any) => {
+              playPlaylistFromTrack(items, item);
+            }}
+            onRightPress={() => {
+              onTrackOptionPress && onTrackOptionPress(item);
+            }}
+          />
+        )}
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={false}
+        ItemSeparatorComponent={() => <View className="h-3" />}
+      />
     </VStack>
   );
   const _renderitem = useCallback(

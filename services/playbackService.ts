@@ -33,12 +33,13 @@ export const generateTracksListId = (
 
 export const playTrack = async (track: Track) => {
   try {
+    let newTrack = { ...track };
     if (track.id.length === 8) {
-      track.url = await fetchSong(track.id);
+      newTrack.url = await fetchSong(track.id);
     }
 
     await TrackPlayer.reset();
-    await TrackPlayer.load(track);
+    await TrackPlayer.load(newTrack);
     await TrackPlayer.play();
   } catch (error) {
     console.log("Error loading track:", error);

@@ -19,7 +19,8 @@ import { unknownTrackImageSource } from "@/constants/image";
 import { iconColor } from "@/constants/tokens";
 import { convertZingToTrack } from "@/helpers/convert";
 import { fetchChart, fetchSong, fetchTop100Tracks } from "@/lib/spotify";
-import { playTrack } from "@/services/playbackService";
+import { playPlaylistFromTrack, playTrack } from "@/services/playbackService";
+import { useQueueStore } from "@/store/queue";
 import { Chart, ExtendedTrack, MyTrack, RegionChart } from "@/types/zing.types";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -123,10 +124,11 @@ interface TrendingListProps {
 
 const TrendingList = ({ tracks }: TrendingListProps) => {
   const [visibleCount, setVisibleCount] = useState(20);
-
+  const queue = useQueueStore();
   const visibleTracks = tracks?.slice(0, visibleCount) || [];
 
   const onTrackSelect = async (track: Track) => {
+    playTrack(track);
     playTrack(track);
   };
 
@@ -169,44 +171,50 @@ const TrendingList = ({ tracks }: TrendingListProps) => {
 
   return (
     <Box>
-      <FlatList
-        data={visibleTracks}
-        keyExtractor={(item) => item.id}
-        scrollEnabled={false}
-        initialNumToRender={20}
-        maxToRenderPerBatch={20}
-        windowSize={10}
-        ItemSeparatorComponent={() => <View className="h-3 bg-transparent" />}
-        ListFooterComponent={
-          visibleCount < (tracks?.length || 0) ? (
-            <Center className="w-full h-10 bg-background-0">
-              <Button
-                variant="link"
-                className="rounded-full"
-                onPress={() => setVisibleCount(visibleCount + 100)}
-              >
-                <VStack className="items-center">
-                  <ButtonText className="text-sm">Xem thêm</ButtonText>
-                  <ButtonIcon as={ChevronDown} />
-                </VStack>
-              </Button>
-            </Center>
-          ) : (
-            <></>
-          )
-        }
-        renderItem={({ item: track, index: index }) => (
-          <HStack className="pr-4 pl-2">
-            <Center className="w-14 pr-2">
-              <Text className={numberStyle(index + 1)}>{index + 1}</Text>
-              {rankingStyle(track.rakingStatus ?? 0)}
-            </Center>
-            <Box className="flex-1">
-              <TracksListItem track={track} onTrackSelect={onTrackSelect} />
-            </Box>
-          </HStack>
-        )}
-      />
+    <FlatList
+      data={visibleTracks}
+      keyExtractor={(item) => item.id}
+      scrollEnabled={false}
+      initialNumToRender={20}
+      maxToRenderPerBatch={20}
+      windowSize={10}
+      ItemSeparatorComponent={() => (
+        <View className="h-3 bg-transparent" />
+      )}
+      ListFooterComponent={
+        visibleCount < (tracks?.length || 0) ? (
+          <Center className="w-full h-10 bg-background-0">
+            <Button
+              variant="link"
+              className="rounded-full"
+              onPress={() => setVisibleCount(visibleCount + 100)}
+            >
+              <VStack className="items-center">
+              <ButtonText className="text-sm">Xem thêm</ButtonText>
+              <ButtonIcon as={ChevronDown} />
+              </VStack>
+            </Button>
+  
+          </Center>
+        ) : (
+          <></>
+        )
+      }
+      renderItem={({ item: track, index: index }) => (
+        <HStack className="pr-4 pl-2">
+          <Center className="w-14 pr-2">
+            <Text className={numberStyle(index + 1)}>{index + 1}</Text>
+            {rankingStyle(track.rakingStatus ?? 0)}
+          </Center>
+          <Box className="flex-1">
+            <TracksListItem
+              track={track}
+              onTrackSelect={onTrackSelect}
+            />
+          </Box>
+        </HStack>
+      )}
+    />
     </Box>
   );
 };

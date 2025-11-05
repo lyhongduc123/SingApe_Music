@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "549501516548",
+    "project_id": "singape-d3ed0",
+    "storage_bucket": "singape-d3ed0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:549501516548:android:adf8c14be1d9574b53ae51",
+        "android_client_info": {
+          "package_name": "com.package.singape"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsx2x9wr00Sp0eGtZ0X-RsdUCE-DxBddg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

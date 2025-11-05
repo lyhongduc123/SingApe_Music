@@ -70,7 +70,7 @@ export const RecentList = ({
           >
             <ButtonText>Xóa lịch sử tìm kiếm gần đây</ButtonText>
           </Button>
-          <View className="h-10 bg-transparent" />
+          <View className="h-20 bg-transparent" />
         </Center>
       )}
       ListHeaderComponent={() => {

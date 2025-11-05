@@ -61,20 +61,20 @@ export async function saveToLibrary(uri: string, albumName = "MyMusic") {
   return asset;
 }
 
-export async function saveListeningHistory(track: MyTrack) {
-  const historyFileUri = HISTORY_FILE;
+export async function saveListeningHistory(track: Track) {
   let history = [];
 
   try {
-    const fileContent = await FileSystem.readAsStringAsync(historyFileUri);
+    const fileContent = await FileSystem.readAsStringAsync(HISTORY_FILE);
     history = JSON.parse(fileContent);
+    console.log("Existing history loaded:", history);
   } catch (error) {
     console.log("No existing history file found, creating a new one.");
   }
   history = history.filter((item: any) => item.track.id !== track.id);
   history.unshift({ track, timestamp: new Date().toISOString() });
   history = history.slice(0, 50);
-  await FileSystem.writeAsStringAsync(historyFileUri, JSON.stringify(history));
+  await FileSystem.writeAsStringAsync(HISTORY_FILE, JSON.stringify(history));
 }
 
 export async function getListeningHistory(): Promise<
@@ -94,12 +94,14 @@ export async function getListeningHistory(): Promise<
 }
 
 export async function deleteListeningHistory(trackId: string) {
+  const { user } = useAuth();
+  const historyFileUri = HISTORY_FILE + (user?.id ? `_${user.id}/` : '');
   const fileInfo = await FileSystem.getInfoAsync(HISTORY_FILE);
   if (fileInfo.exists) {
     let history = [];
 
     try {
-      const fileContent = await FileSystem.readAsStringAsync(HISTORY_FILE);
+      const fileContent = await FileSystem.readAsStringAsync(historyFileUri);
       history = JSON.parse(fileContent);
     } catch (error) {
       console.log("Cant read history file.");
@@ -116,9 +118,11 @@ export async function deleteListeningHistory(trackId: string) {
 }
 
 export async function clearListeningHistory() {
+  const { user } = useAuth();
+  const historyFileUri = HISTORY_FILE + (user?.id ? `_${user.id}/` : '');
   const fileInfo = await FileSystem.getInfoAsync(HISTORY_FILE);
   if (fileInfo.exists) {
-    await FileSystem.writeAsStringAsync(HISTORY_FILE, JSON.stringify([]));
+    await FileSystem.writeAsStringAsync(historyFileUri, JSON.stringify([]));
   }
 }
 
