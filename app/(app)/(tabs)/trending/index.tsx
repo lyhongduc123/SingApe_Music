@@ -69,7 +69,6 @@ export default function Trending() {
     fetchTrendingData();
   }, []);
 
-
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-background-0">
@@ -86,8 +85,8 @@ export default function Trending() {
 
   return (
     <SafeAreaView className="flex-1 bg-background-0">
-      <ScrollView 
-      contentContainerStyle={{
+      <ScrollView
+        contentContainerStyle={{
           paddingBottom: 50,
         }}
         showsVerticalScrollIndicator={false}
@@ -100,30 +99,24 @@ export default function Trending() {
         />
         <TrendingList tracks={trendingTracks} />
         <Box className="flex-1 bg-transparent rounded-t-md">
-        <Divider className="mb-2"/>
-          <Heading className="text-2xl font-bold text-center">Xu hướng tuần</Heading>
+          <Divider className="mb-2" />
+          <Heading className="text-2xl font-bold text-center">
+            Xu hướng tuần
+          </Heading>
           <Pressable onPress={() => {}}>
-            <WeeklyList data={data?.weekChart.vn} title="V-POP"/>
+            <WeeklyList data={data?.weekChart.vn} title="V-POP" />
           </Pressable>
           <Pressable onPress={() => {}}>
-            <WeeklyList data={data?.weekChart.us} title="US-UK"/>
+            <WeeklyList data={data?.weekChart.us} title="US-UK" />
           </Pressable>
           <Pressable onPress={() => {}}>
-            <WeeklyList data={data?.weekChart.korea} title="K-POP"/>
+            <WeeklyList data={data?.weekChart.korea} title="K-POP" />
           </Pressable>
         </Box>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-
-
-
-
-
-
-
 
 interface TrendingListProps {
   tracks?: MyTrack[];
@@ -135,6 +128,7 @@ const TrendingList = ({ tracks }: TrendingListProps) => {
   const visibleTracks = tracks?.slice(0, visibleCount) || [];
 
   const onTrackSelect = async (track: Track) => {
+    playTrack(track);
     playTrack(track);
   };
 
@@ -245,11 +239,15 @@ const WeeklyList = (props: WeeklyListProps) => {
           </Text>
           {props.data?.items.slice(0, 3).map((item, index) => {
             return (
-            <Text key={item.encodeId || index}
-            className="text-sm text-white" ellipsizeMode="tail" numberOfLines={1}>
-              {index + 1}. {item.title} - {item.artists[0].name}
-            </Text>
-            )
+              <Text
+                key={item.encodeId || index}
+                className="text-sm text-white"
+                ellipsizeMode="tail"
+                numberOfLines={1}
+              >
+                {index + 1}. {item.title} - {item.artists[0].name}
+              </Text>
+            );
           })}
         </VStack>
       </HStack>
@@ -262,4 +260,3 @@ const WeeklyList = (props: WeeklyListProps) => {
     </Card>
   );
 };
-
