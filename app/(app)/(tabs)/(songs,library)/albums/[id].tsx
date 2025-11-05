@@ -31,13 +31,14 @@ import {
   Shuffle,
 } from "lucide-react-native";
 import { AlbumScreen } from "@/components/screens/AlbumScreen";
-import { MyTrack, Playlist } from "@/types/zing.types";
+import { Artist, MyTrack, Playlist } from "@/types/zing.types";
 import { useEffect, useState } from "react";
 import {
   checkPlaylistExists,
   createPlaylist,
   createPlaylistWithTracks,
-} from "@/services/fileService";
+  deletePlaylist,
+} from "@/services/cacheService";
 import { fetchPlaylist } from "@/lib/spotify";
 import { convertZingToTrack } from "@/helpers/convert";
 import {
@@ -51,19 +52,26 @@ import { useAuth } from "@/context/auth";
 import { MyBottomSheet } from "@/components/bottomSheet/MyBottomSheet";
 import { useQueueStore } from "@/store/queue";
 import { fetchSong } from "@/lib/spotify";
+import { useLibraryStore } from "@/store/mylib";
 
 export default function Album() {
   const item = useLocalSearchParams<MyTrack>();
   const [data, setData] = useState<MyTrack[]>([]);
   const [isInUserPlaylist, setIsInUserPlaylist] = useState(false);
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [userName, setUserName] = useState<string>("");
   const { user } = useAuth();
   const { playing } = useIsPlaying();
   const activeQueueId = useQueueStore((state) => state.activeQueueId);
   const setActiveQueueId = useQueueStore((state) => state.setActiveQueueId);
+  const queueId = generateTracksListId(item.title || "Unknown", item.id);
+  const libraryStore = useLibraryStore();
 
   const fetchAlbum = async () => {
     // const response = await getAlbumById(item.id);
     const response: Playlist = await fetchPlaylist(item.id);
+    setArtists(response.artists.map((artist) => artist));
+    setUserName(response.userName);
     setData(
       await Promise.all(
         response.song.items.map(async (track) => {
@@ -81,7 +89,6 @@ export default function Album() {
   const title = "Album";
 
   const onPlayPress = async () => {
-    const queueId = item.id;
     if (activeQueueId === queueId) {
       if (!playing) {
         TrackPlayer.play();
@@ -89,15 +96,25 @@ export default function Album() {
       }
 
       TrackPlayer.pause();
+    } else {
+      setActiveQueueId(queueId);
+      await playPlaylist(data);
     }
-    // } else {
-    //   setActiveQueueId(queueId);
-    //   playPlaylist(data);
-    // }
   };
 
-  const onShufflePress = () => {
-    playPlaylist(data.sort(() => Math.random() - 0.5));
+  const onShufflePress = async () => {
+    if (activeQueueId === queueId) {
+      if (!playing) {
+        await TrackPlayer.play();
+        return;
+      }
+
+      await TrackPlayer.pause();
+    } else {
+      setActiveQueueId(queueId);
+      const shuffledTracks = data;
+      playPlaylist(shuffledTracks.sort(() => Math.random() - 0.5));
+    }
   };
 
   const onTrackPress = (track: Track) => {
@@ -105,7 +122,13 @@ export default function Album() {
   };
 
   const onAddToPlaylistPress = async () => {
-    await createPlaylistWithTracks(
+    if (isInUserPlaylist) {
+      await deletePlaylist(item.id);
+      libraryStore.deletePlaylist(item.id);
+      setIsInUserPlaylist(false);
+      return;
+    }
+    const newPlaylist = await createPlaylistWithTracks(
       user?.user_metadata?.display_name ?? "Unknown User",
       item.id ?? "Unknown Album",
       item.title ?? "Danh sách phát " + item.id,
@@ -113,6 +136,12 @@ export default function Album() {
       "Danh sách phát của " + (item.artists[0]?.name ?? "Unknown Artist"),
       data
     );
+    const playlistWithUrl = {
+      ...newPlaylist,
+      url: item.artwork ?? "", // Add the 'url' property
+    };
+    libraryStore.setPlaylist(playlistWithUrl);
+    setIsInUserPlaylist(true);
   };
 
   const onOptionPress = () => {
@@ -127,11 +156,12 @@ export default function Album() {
         }}
       />
       <AlbumScreen
-        id={item.id}
+        id={queueId}
         imageUrl={item.artwork}
         title={item.title}
-        artists={item.artists}
-        tracks={data.slice(0, 10)}
+        artists={artists}
+        userName={userName}
+        tracks={data}
         releaseDate={item.releaseDate}
         onPlayPress={onPlayPress}
         onShufflePress={onShufflePress}

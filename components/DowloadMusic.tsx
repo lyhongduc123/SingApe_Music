@@ -46,7 +46,7 @@ export const downloadSong = async (url: string, filename: string) => {
       return null;
     }
   } catch (error) {
-    console.error("Download error:", error);
+    console.log("Download error:", error);
     Alert.alert("Lỗi", "Đã có lỗi xảy ra khi tải nhạc.");
     return null;
   }

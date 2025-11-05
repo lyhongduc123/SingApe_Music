@@ -1,30 +1,60 @@
+import ButtonBottomSheet from "@/components/bottomSheet/ButtonBottomSheet";
+import { MyBottomSheet } from "@/components/bottomSheet/MyBottomSheet";
+import { HistoryTrackBottomSheet } from "@/components/bottomSheet/HistoryTrackBottomSheet";
 import CustomHeader from "@/components/CustomHeader";
+import { downloadSong } from "@/components/DowloadMusic";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { TracksList } from "@/components/TrackList";
-import { Button } from "@/components/ui";
+import { Button, HStack, Pressable, Text, Image, VStack, Box } from "@/components/ui";
 import { ButtonIcon, ButtonText } from "@/components/ui/button";
+import { Divider } from "@/components/ui/divider";
+import { unknownTrackImageSource } from "@/constants/image";
 import { useModal } from "@/context/modal";
 import { supabase } from "@/lib/supabase";
-import { deleteListeningHistory, getListeningHistory, saveListeningHistory } from "@/services/fileService";
+import {
+  addSongToFavorite,
+  clearListeningHistory,
+  deleteListeningHistory,
+  getListeningHistory,
+  removeSongFromFavorite,
+  saveListeningHistory,
+} from "@/services/cacheService";
+import { useFavoriteStore, useLibraryStore } from "@/store/mylib";
 import { MyTrack } from "@/types/zing.types";
-import { Stack } from "expo-router";
-import { Trash } from "lucide-react-native";
-import { useEffect, useState } from "react";
-import { View } from "react-native";
-import { FlatList } from "react-native-gesture-handler";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { router, Stack } from "expo-router";
+import { CircleArrowDown, CirclePlus, Heart, Share2, Trash, UserRoundCheck } from "lucide-react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Alert, View } from "react-native";
+import { LinearTransition } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Track, useActiveTrack } from "react-native-track-player";
-
 
 export default function History() {
-  const [tracks, setTracks] = useState<MyTrack[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<MyTrack | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const { show } = useModal();
+  const favouriteStore = useFavoriteStore();
+  const historyStore = useLibraryStore((state) => state.history);
+  const libraryStore = useLibraryStore();
+
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const handlePresentModalPress = useCallback(() => {
+    bottomSheetRef.current?.present();
+  }, []);
+  const handleDismissModalPress = useCallback(() => {
+    bottomSheetRef.current?.close();
+  }, []);
 
   useEffect(() => {
     const fetchTracks = async () => {
       setIsLoading(true);
       try {
+        if (historyStore.length > 0) {
+          return;
+        }
+
         const history = await getListeningHistory();
         const track = history.map((item) => {
           return {
@@ -37,9 +67,7 @@ export default function History() {
             genre: item.track.genre || undefined,
           } as MyTrack;
         });
-        
-        setTracks(track);
-        console.log("Fetched tracks: ", track.map((item) => item.id + " " + item.title));
+        libraryStore.setHistory(track);
       } catch (error) {
         console.error("Error fetching tracks:", error);
       } finally {
@@ -58,12 +86,67 @@ export default function History() {
       confirmText: "Xóa",
       cancelText: "Hủy",
       onConfirm: async () => {
-        await deleteListeningHistory();
-        setTracks([]);
+        libraryStore.clearHistory();
+        await clearListeningHistory();
+      },
+    });
+  };
+
+  const handleArtistPress = async () => {
+    if (selectedItem) {
+      handleDismissModalPress();
+      console.log("artistId", selectedItem);
+      router.navigate({
+        pathname: `/(app)/(tabs)/(songs)/artists/[id]`,
+        params: {
+          id: selectedItem?.artists[0].alias ?? selectedItem?.artist ?? "",
+        },
+      });
+    }
+  };
+
+  const handleSharePress = async () => {
+    if (selectedItem) {
+      handleDismissModalPress();
+      console.log("Share", selectedItem);
+      // Implement share functionality here
+    }
+  };
+
+  const handleAddToPlaylistPress = async () => {
+    if (selectedItem) {
+      handleDismissModalPress();
+      router.push({
+        pathname: "/addToPlaylist",
+        params: selectedItem,
+      });
+    }
+  };
+
+  const handleFavoritePress = async () => {
+    if (selectedItem) {
+      try {
+        if (isFavorite) {
+          favouriteStore.removeTrackFromFavorites(selectedItem.id);
+          await removeSongFromFavorite(selectedItem);
+        } else {
+          favouriteStore.addTrackToFavorites(selectedItem);
+          await addSongToFavorite(selectedItem);
+        }
+      } catch (error) {
+        console.error("Error playing playlist:", error);
       }
-    })
-  }
-    
+    }
+  };
+
+  const handleDownloadPress = async () => {
+    if (selectedItem) {
+      try {
+      } catch (error) {
+        console.error("Error playing playlist:", error);
+      }
+    }
+  };
 
   if (isLoading) {
     return (
@@ -84,7 +167,6 @@ export default function History() {
     );
   }
 
-
   return (
     <SafeAreaView className="flex-1 bg-background-0">
       <Stack.Screen
@@ -95,31 +177,35 @@ export default function History() {
       <CustomHeader
         title="Lịch sử"
         showBack={true}
-        centerTitle={true}
         headerClassName="bg-background-0"
         right={
-          <Button
-            variant="solid"
-            size="md"
+          <Pressable
             onPress={handleDeleteHistory}
-            className="w-10 h-10"
+            className="px-3 mr-2 rounded-full data-[active=true]:opacity-50"
           >
-            <ButtonText className="text-primary-500">
-              Xoa
-            </ButtonText>
-          </Button>
+            <Text className="text-primary-500 font-semibold">Xóa tất cả</Text>
+          </Pressable>
         }
       />
-
       <TracksList
         id="history"
-        tracks={tracks}
+        tracks={historyStore}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View className="h-3" />}
         contentContainerStyle={{
           paddingBottom: 100,
         }}
+        onTrackOptionPress={(handleTrack) => {
+          setSelectedItem(handleTrack);
+          handlePresentModalPress();
+        }}
         className="px-4"
+      />
+      <HistoryTrackBottomSheet
+        bottomSheetRef={bottomSheetRef}
+        selectedItem={selectedItem}
+        handleDismissModalPress={handleDismissModalPress}
+        handlePresentModalPress={handleDownloadPress}
       />
     </SafeAreaView>
   );

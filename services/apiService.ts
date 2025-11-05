@@ -12,10 +12,9 @@ export async function getSongs() {
     song_genres (
     *,
       genres (*)
-  )`
-  );
+  )`);
   if (error) {
-    console.error("Error fetching songs:", error);
+    console.log("Error fetching songs:", error);
     throw error;
   }
 
@@ -48,7 +47,7 @@ export async function likeSong(track: Track) {
   }
 
   if (error) {
-    console.error("Error liking song:", error);
+    console.log("Error liking song:", error);
     throw error;
   }
 

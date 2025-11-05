@@ -5,14 +5,14 @@ import { VStack } from "@/components/ui";
 import { useModal } from "@/context/modal";
 import { useAuth } from "@/context/auth";
 import { convertZingToTrack } from "@/helpers/convert";
-import { likeSong } from "@/lib/api";
 import { fetchPlaylist } from "@/lib/spotify";
 import {
   createPlaylist,
   deletePlaylist,
   getPlaylist,
   listPlaylists,
-} from "@/services/fileService";
+  removeSongFromPlaylist,
+} from "@/services/cacheService";
 import { generateTracksListId, playPlaylist, playPlaylistFromTrack } from "@/services/playbackService";
 import { usePlaylists } from "@/store/library";
 import { useLibraryStore } from "@/store/mylib";
@@ -42,6 +42,7 @@ export default function Playlists() {
   const [data, setData] = useState<MyTrack[]>([]);
 
   const playlists = useLibraryStore((state) => state.playlists);
+  const setPlaylist = useLibraryStore((state) => state.setPlaylist);
   const deleteStorePlaylist = useLibraryStore((state) => state.deletePlaylist);
 
   const { user } = useAuth();
@@ -49,6 +50,7 @@ export default function Playlists() {
   const { playing } = useIsPlaying();
   const activeQueueId = useQueueStore((state) => state.activeQueueId);
   const setActiveQueueId = useQueueStore((state) => state.setActiveQueueId);
+  const queueId = generateTracksListId(item.title || "Unknown", item.id);;
   const variant = useSegments().find((segment) => segment === "(songs)")
     ? "songs"
     : "library";
@@ -86,8 +88,6 @@ export default function Playlists() {
   };
 
   const handleOnPlayPress = async () => {
-    const queueId = item.id;
-    console.log("Queue ID:", queueId);
     if (activeQueueId === queueId) {
       if (!playing) {
         await TrackPlayer.play();
@@ -102,7 +102,6 @@ export default function Playlists() {
   };
 
   const handleOnShufflePress = async () => {
-    const queueId = generateTracksListId(item.title || "Unknown", item.id);
     if (activeQueueId === queueId) {
       if (!playing) {
         await TrackPlayer.play();
@@ -112,8 +111,9 @@ export default function Playlists() {
       await TrackPlayer.pause();
     } else {
       setActiveQueueId(queueId);
+      const shuffledTracks = data;
       playPlaylist(
-        data.sort(() => Math.random() - 0.5)
+        shuffledTracks.sort(() => Math.random() - 0.5)
       );
     }
   };
@@ -187,6 +187,17 @@ export default function Playlists() {
     }, [playlists])
   );
 
+  const onRemoveFromPlaylist = async (track: MyTrack) => {
+    await removeSongFromPlaylist(item.id, track);
+    const updatedTracks = data.filter((t) => t.id !== track.id);
+    const updatedPlaylist = {
+      ...item,
+      tracks: updatedTracks,
+    };
+    setPlaylist(updatedPlaylist);
+    setData(updatedTracks);
+  }
+
   return (
     <View className="flex-1 bg-background-0">
       <Stack.Screen
@@ -195,7 +206,7 @@ export default function Playlists() {
         }}
       />
       <PlaylistScreen
-        id={item.id}
+        id={queueId}
         imageUrl={item.artwork}
         title={item.title}
         createdBy={item.createdBy}
@@ -215,6 +226,7 @@ export default function Playlists() {
             },
           })
         }
+        onRemoveFromPlaylist={onRemoveFromPlaylist}
       />
       <MyBottomSheet bottomSheetRef={bottomSheetRef}>
         <VStack space="md" className="w-full">

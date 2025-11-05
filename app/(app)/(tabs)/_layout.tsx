@@ -1,4 +1,4 @@
-import { useRouter, Tabs, Redirect, Stack, router } from "expo-router";
+import { useRouter, Tabs, Redirect, Stack, router, useRootNavigationState } from "expo-router";
 import { useAuth } from "../../../context/auth";
 import { FontAwesome } from "@expo/vector-icons";
 import {
@@ -22,13 +22,20 @@ import { View } from "react-native";
 import { lazy, useEffect } from "react";
 import * as NavigationBar from "expo-navigation-bar";
 import { useColorScheme } from "nativewind";
+import supabase from "@/lib/supabase";
 
 export default function TabsNavigation() {
-  const { session } = useAuth();
+  const { session, setSession, setUser } = useAuth();
   const { colorScheme } = useColorScheme();
-  if (!session) {
-    // router.replace("/(auth)");
-  }
+
+  // useEffect(() => {
+  //   if (!rootNavigationState?.key) return; // wait until navigation is ready
+
+  //   if (!session) {
+  //     console.log("No session found, redirecting to auth");
+  //     router.replace('/(auth)');
+  //   }
+  // }, [rootNavigationState, session]);
 
   useEffect(() => {
     const bgColor =
@@ -79,13 +86,6 @@ export default function TabsNavigation() {
             title: "Thư viện",
             popToTopOnBlur: true,
             tabBarIcon: ({ color }) => <Icon as={Library} color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="debug"
-          options={{
-            title: "Debug",
-            tabBarIcon: ({ color }) => <Icon as={Settings} color={color} />,
           }}
         />
         <Tabs.Screen

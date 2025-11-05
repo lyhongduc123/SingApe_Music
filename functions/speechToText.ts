@@ -30,7 +30,7 @@ export const speechToText = async (req: Request, res: Response) => {
 
     return res.send(speechResults);
   } catch (err) {
-    console.error("Error converting speech to text: ", err);
+    console.log("Error converting speech to text: ", err);
     res.status(404).send(err);
     return err;
   }

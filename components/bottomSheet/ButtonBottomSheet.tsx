@@ -25,15 +25,11 @@ export default function ButtonBottomSheet(
 ) {
   const [isFill, setIsFill] = useState(fillIcon);
 
-  const debouncedOnPress = useDebouncedCallback(onPress, 2000);
-
   const handleOnPress = () => {
     if (stateChangable) {
       setIsFill(!isFill);
-      debouncedOnPress();
-    } else {
-      onPress();
     }
+    onPress();
   }
   return (
     <Button

@@ -4,6 +4,7 @@ import { router, Stack } from "expo-router";
 export default function AuthLayout() {
   const { session } = useAuth();
   if (session) {
+    console.log("AuthLayout: User is authenticated, redirecting to app");
     return router.replace("/(app)/(tabs)/(songs)");
   }
   return (

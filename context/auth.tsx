@@ -91,7 +91,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setSession(data.session);
       setUser(data.session.user);
     } catch (error) {
-      console.error("Sign-in error:", error);
+      console.log("Sign-in error:", error);
       setError({
         name: "AuthUnknown",
         message: "Unknown error during sign in",
@@ -131,7 +131,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setSession(session);
       setUser(session.user);
     } catch (error) {
-      console.error("Sign-up error:", error);
+      console.log("Sign-up error:", error);
       setError({
         name: "AuthUnknown",
         message: "Unknown error during sign up",
@@ -141,8 +141,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
   };
 
-
-
   // Sign out
   const signOut = async () => {
     try {
@@ -151,7 +149,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setSession(null);
       setUser(null);
     } catch (error) {
-      console.error("Error signing out:", error);
+      console.log("Error signing out:", error);
       // setError(error);
     } finally {
       setLoading(false);

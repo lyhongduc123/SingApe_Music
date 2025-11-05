@@ -59,6 +59,7 @@ export default function Artist() {
       <ArtistScreen
         data={data}
         id={data?.id}
+        alias={item.id}
         name={data?.name}
         imageUrl={data?.thumbnailM}
         gradientColor={gradientColor}

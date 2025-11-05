@@ -3,11 +3,12 @@
 import React, { createContext, useState, useEffect, useContext } from "react"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 
-type Theme = "light" | "dark"
+type Theme = "light" | "dark" | "system"
 
 interface ThemeContextType {
   theme: Theme
   toggleTheme: () => void
+  changeTheme: (theme: Theme) => void
 }
 
 export const ThemeContext = createContext<ThemeContextType | undefined>(
@@ -35,8 +36,13 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     AsyncStorage.setItem("theme", newTheme)
   }
 
+  const changeTheme = (theme: Theme) => {
+    setTheme(theme)
+    AsyncStorage.setItem("theme", theme)
+  }
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, changeTheme }}>
       {children}
     </ThemeContext.Provider>
   )

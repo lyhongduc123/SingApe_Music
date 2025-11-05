@@ -22,8 +22,12 @@ import { TracksList } from "./../TrackList";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
   Extrapolation,
+  FadeIn,
+  FadeOut,
   interpolate,
   interpolateColor,
+  PinwheelIn,
+  PinwheelOut,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
@@ -41,7 +45,7 @@ import TrackPlayer, {
 } from "react-native-track-player";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getGradient } from "@/helpers/color";
-import { unknownTrackImageSource } from "@/constants/image";
+import { unknownTrackImageSource, userIconSource } from "@/constants/image";
 import { useAuth } from "@/context/auth";
 import { P } from "ts-pattern";
 import { Artist, MyTrack } from "@/types/zing.types";
@@ -53,6 +57,12 @@ import ButtonBottomSheet from "../bottomSheet/ButtonBottomSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useQueueStore } from "@/store/queue";
 import { set } from "@gluestack-style/react";
+import { BS_AddToPlaylist } from "../buttons/BS_AddToPlaylist";
+import { BS_AddToFavorite } from "../buttons/BS_AddToFavorite";
+import { BS_Download } from "../buttons/BS_Download";
+import { BS_MoveToArtist } from "../buttons/BS_MoveToArtist";
+import { BS_Share } from "../buttons/BS_Share";
+import { LoadingOverlay } from "../LoadingOverlay";
 
 interface AlbumProps {
   id?: string;
@@ -60,6 +70,7 @@ interface AlbumProps {
   description?: string;
   imageUrl?: string;
   artists?: Artist[];
+  userName?: string;
   releaseDate?: string;
   tracks?: MyTrack[];
   variant?: "library" | "songs";
@@ -78,6 +89,7 @@ export const AlbumScreen = ({
   description,
   imageUrl,
   artists,
+  userName,
   tracks,
   variant = "songs",
   onTrackPress,
@@ -89,7 +101,7 @@ export const AlbumScreen = ({
   onDownloadPress,
   inUserPlaylist = false,
 }: AlbumProps) => {
-  const [selectedItem, setSelectedItem] = useState<Track>();
+  const [selectedItem, setSelectedItem] = useState<MyTrack | null>(null);
   const { playing } = useIsPlaying();
   const queueId = useQueueStore((state) => state.activeQueueId);
   const [activeButton, setActiveButton] = useState(false);
@@ -99,7 +111,10 @@ export const AlbumScreen = ({
   const colorScheme = useColorScheme();
 
   const formatedDate = formatDate(releaseDate || "");
-  const artistsName = "Unknown Artist";
+  const artistsName = userName ? "SingApe" : artists?.[0]?.name || undefined;
+  const imageSource = userName
+    ? userIconSource
+    : artists?.[0]?.thumbnail || unknownTrackImageSource;
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -146,35 +161,9 @@ export const AlbumScreen = ({
     bottomSheetRef.current?.dismiss();
   }, []);
 
-  const handleTrackOptionPress = (track: Track) => {
+  const handleTrackOptionPress = (track: MyTrack) => {
     handlePresentModalPress();
     setSelectedItem(track);
-  };
-
-  const handleAddToPlaylistPress = () => {};
-  const handleFavoritePress = () => {
-    if (selectedItem) {
-      setSelectedItem({
-        ...selectedItem,
-        isFavorite: !selectedItem?.isFavorite,
-      });
-    }
-  };
-  const handleDownloadPress = () => {
-    // Handle download action
-  };
-  const handleRemoveFromPlaylistPress = () => {
-    // Handle remove from playlist action
-  };
-  const handleArtistPress = () => {
-    handleDismissModalPress();
-    router.navigate({
-      pathname: `/(app)/(tabs)/(${variant})/artists/[id]`,
-      params: { id: selectedItem?.artist ?? "" },
-    });
-  };
-  const handleSharePress = () => {
-    // Handle share action
   };
 
   const variantSong = () => {
@@ -187,7 +176,7 @@ export const AlbumScreen = ({
           onPress={onAddToPlaylistPress}
         >
           {inUserPlaylist ? (
-            <ButtonIcon as={CircleCheck} className={buttonIconStyle} />
+            <ButtonIcon as={CircleCheck} className={`fill-green-500 w-8 h-8`} />
           ) : (
             <ButtonIcon as={CirclePlus} className={buttonIconStyle} />
           )}
@@ -200,14 +189,14 @@ export const AlbumScreen = ({
         >
           <ButtonIcon as={CircleArrowDown} className={buttonIconStyle} />
         </Button>
-        <Button
+        {/* <Button
           variant="solid"
           className="rounded-full justify-center bg-transparent h-14 w-14 data-[active=true]:bg-transparent data-[active=true]:opacity-40"
           size="md"
           onPress={onOptionPress}
         >
           <ButtonIcon as={EllipsisVertical} className={buttonIconStyle} />
-        </Button>
+        </Button> */}
       </HStack>
     );
   };
@@ -226,7 +215,7 @@ export const AlbumScreen = ({
           <VStack className="bg-transparent">
             <Box className="w-full justify-center items-center mt-4">
               <Image
-                source={{ uri: imageUrl || unknownTrackImageSource }}
+                source={imageUrl || unknownTrackImageSource}
                 className="w-48 h-48 rounded-lg"
                 alt="Playlist Image"
                 resizeMode="cover"
@@ -236,17 +225,17 @@ export const AlbumScreen = ({
               <Heading>{title}</Heading>
               <Text className="text-gray-500 mt-2">{description}</Text>
             </Box>
-            <HStack space="md" className="items-center px-4">
-              <Image
-                source={{
-                  uri: artists?.[0]?.thumbnail || unknownTrackImageSource,
-                }}
-                className="w-7 h-7 rounded-full"
-                alt="User"
-                resizeMode="cover"
-              />
-              <Text className="text-gray-500 font-bold">{artistsName}</Text>
-            </HStack>
+            {artistsName && (
+              <HStack space="md" className="items-center px-4">
+                <Image
+                  source={imageSource}
+                  className="w-7 h-7 rounded-full"
+                  alt="User"
+                  resizeMode="cover"
+                />
+                <Text className="text-primary-500 font-bold">{artistsName}</Text>
+              </HStack>
+            )}
             <Box className="w-full px-4 pt-2">
               <Text className="text-gray-500">{formatedDate}</Text>
             </Box>
@@ -294,14 +283,17 @@ export const AlbumScreen = ({
 
       <View className="absolute w-full" style={{ paddingTop: insets.top }}>
         <Animated.View
-          style={[headerBackgroundAnimatedStyle, {
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            paddingTop: insets.top,
-          }]}
+          style={[
+            headerBackgroundAnimatedStyle,
+            {
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              paddingTop: insets.top,
+            },
+          ]}
           // className="absolute w-full h-full bg-transparent"
         >
           <LinearGradient
@@ -335,7 +327,7 @@ export const AlbumScreen = ({
             style={[scrollHeaderTitleAnimatedStyle]}
             className="text-primary-500 text-xl font-bold ml-4"
           >
-            Danh sách phát
+            {title}
           </Animated.Text>
         </HStack>
         <Animated.View
@@ -365,11 +357,7 @@ export const AlbumScreen = ({
       <MyBottomSheet bottomSheetRef={bottomSheetRef}>
         <HStack space="md">
           <Image
-            source={
-              selectedItem?.artwork
-                ? { uri: selectedItem.artwork }
-                : unknownTrackImageSource
-            }
+            source={selectedItem?.artwork || unknownTrackImageSource}
             className="rounded"
             size="sm"
             alt="track artwork"
@@ -387,37 +375,25 @@ export const AlbumScreen = ({
           <Divider />
         </Box>
         <VStack space="md" className="w-full">
-          <ButtonBottomSheet
-            onPress={handleAddToPlaylistPress}
-            buttonIcon={CirclePlus}
-            buttonText="Thêm vào danh sách phát"
+          <BS_AddToPlaylist
+            selectedItem={selectedItem}
+            handleDismissModalPress={handleDismissModalPress}
           />
-          <ButtonBottomSheet
-            onPress={handleFavoritePress}
-            stateChangable={true}
-            fillIcon={selectedItem?.isFavorite}
-            buttonIcon={Heart}
-            buttonText="Thêm vào yêu thích"
+          <BS_AddToFavorite
+            selectedItem={selectedItem}
+            handleDismissModalPress={handleDismissModalPress}
           />
-          <ButtonBottomSheet
-            onPress={handleDownloadPress}
-            buttonIcon={CircleArrowDown}
-            buttonText="Tải xuống"
+          <BS_Download
+            selectedItem={selectedItem}
+            handleDismissModalPress={handleDismissModalPress}
           />
-          <ButtonBottomSheet
-            onPress={handleRemoveFromPlaylistPress}
-            buttonIcon={CircleX}
-            buttonText="Xóa khỏi danh sách phát"
+          <BS_MoveToArtist
+            selectedItem={selectedItem}
+            handleDismissModalPress={handleDismissModalPress}
           />
-          <ButtonBottomSheet
-            onPress={handleArtistPress}
-            buttonIcon={CircleUserRound}
-            buttonText="Chuyển đến nghệ sĩ"
-          />
-          <ButtonBottomSheet
-            onPress={handleSharePress}
-            buttonIcon={Share2}
-            buttonText="Chia sẻ"
+          <BS_Share
+            selectedItem={selectedItem}
+            handleDismissModalPress={handleDismissModalPress}
           />
         </VStack>
       </MyBottomSheet>

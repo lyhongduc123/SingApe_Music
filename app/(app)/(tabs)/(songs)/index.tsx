@@ -6,6 +6,7 @@ import {
   RefreshControl,
   useWindowDimensions,
   InteractionManager,
+  Alert,
 } from "react-native";
 import { Href, Link, useNavigation, useRouter } from "expo-router";
 import {
@@ -41,7 +42,7 @@ import {
   checkIfSongInFavorites,
   getListeningHistory,
   removeSongFromFavorite,
-} from "@/services/fileService";
+} from "@/services/cacheService";
 import { getAllSongs, getSongsByArtistId } from "@/lib/api/songs";
 import { getAllArtists } from "@/lib/api/artists";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
@@ -60,10 +61,20 @@ import {
   Mic,
 } from "lucide-react-native";
 import { AlbumList } from "@/components/AlbumList";
+import { downloadSong } from "@/components/DowloadMusic";
+
+import { useFavoriteStore } from "@/store/mylib";
+import { ShareModal } from "@/components/ShareModal";
+import { BS_AddToFavorite } from "@/components/buttons/BS_AddToFavorite";
+import { BS_AddToPlaylist } from "@/components/buttons/BS_AddToPlaylist";
+import { BS_Download } from "@/components/buttons/BS_Download";
+import { BS_MoveToArtist } from "@/components/buttons/BS_MoveToArtist";
+import { BS_Share } from "@/components/buttons/BS_Share";
 
 export default function Songs() {
   const [tracks, setTracks] = useState<MyTrack[]>([]);
   const [selectedItem, setSelectedItem] = useState<MyTrack | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   const [homeData, setHomeData] = useState<{
     tracks: Track[];
@@ -88,12 +99,12 @@ export default function Songs() {
   const numCols = 3;
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
   // Data states
   // const [songs, setSongs] = useState<Song[]>([]);
   // const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const favouriteStore = useFavoriteStore();
   const router = useRouter();
   const navigation = useNavigation();
 
@@ -177,22 +188,22 @@ export default function Songs() {
 
       // setTracks(tracks);
 
-      const zingData: Home = await fetchHome();
-      const chillSection = zingData?.items.find(
+      const resultData: Home = await fetchHome();
+      const chillSection = resultData?.items.find(
         (item) => item.title === "Chill"
       )?.items;
 
-      const newReleaseSection = zingData?.items.find(
+      const newReleaseSection = resultData?.items.find(
         (item) => item.sectionType === "new-release"
       )?.items;
 
       const recentSection = await getListeningHistory();
 
-      const top100Section = zingData?.items.find(
+      const top100Section = resultData?.items.find(
         (item) => item.sectionId === "h100"
       )?.items;
 
-      const albumHotSection = zingData?.items.find(
+      const albumHotSection = resultData?.items.find(
         (item) => item.sectionId === "hAlbum"
       )?.items;
 
@@ -214,8 +225,6 @@ export default function Songs() {
           ? await handleData(albumHotSection)
           : [],
       });
-
-      console.log("New Release Section Data:", homeData.newReleaseSection);
     } catch (error) {
       console.error("", error);
       setIsError(true);
@@ -253,9 +262,9 @@ export default function Songs() {
     bottomSheetRef.current?.close();
   }, []);
 
-  const favoriteState = async () => {
+  const favoriteState = () => {
     if (selectedItem) {
-      const isFavorite = await checkIfSongInFavorites(selectedItem);
+      const isFavorite = favouriteStore.isTrackFavorite(selectedItem.id);
       setIsFavorite(isFavorite);
     }
   };
@@ -273,9 +282,11 @@ export default function Songs() {
   const handleFavoritePress = async () => {
     if (selectedItem) {
       try {
-        if (await checkIfSongInFavorites(selectedItem)) {
+        if (isFavorite) {
+          favouriteStore.removeTrackFromFavorites(selectedItem.id);
           await removeSongFromFavorite(selectedItem);
         } else {
+          favouriteStore.addTrackToFavorites(selectedItem);
           await addSongToFavorite(selectedItem);
         }
       } catch (error) {
@@ -311,6 +322,7 @@ export default function Songs() {
       handleDismissModalPress();
       console.log("Share", selectedItem);
       // Implement share functionality here
+      setShowModal(true);
     }
   };
 
@@ -384,6 +396,9 @@ export default function Songs() {
   };
 
   const renderChillSection = () => {
+    if (!homeData.chillSection || homeData.chillSection.length === 0) {
+      return null; // Return null if there are no chill tracks
+    }
     return (
       <View>
         <Heading className={headingStyle}>Thư giãn</Heading>
@@ -584,35 +599,36 @@ export default function Songs() {
             <Divider />
           </Box>
           <VStack space="md" className="w-full">
-            <ButtonBottomSheet
-              onPress={handleAddToPlaylistPress}
-              buttonIcon={CirclePlus}
-              buttonText="Thêm vào danh sách phát"
+            <BS_AddToPlaylist
+              selectedItem={selectedItem}
+              handleDismissModalPress={handleDismissModalPress}
             />
-            <ButtonBottomSheet
-              onPress={handleFavoritePress}
-              stateChangable={true}
-              fillIcon={isFavorite}
-              buttonIcon={Heart}
-              buttonText="Thêm vào yêu thích"
+            <BS_AddToFavorite
+              selectedItem={selectedItem}
+              handleDismissModalPress={handleDismissModalPress}
             />
-            <ButtonBottomSheet
-              onPress={handleDownloadPress}
-              buttonIcon={CircleArrowDown}
-              buttonText="Tải xuống"
+            <BS_Download
+              selectedItem={selectedItem}
+              handleDismissModalPress={handleDismissModalPress}
             />
-            <ButtonBottomSheet
-              onPress={handleArtistPress}
-              buttonIcon={UserRoundCheck}
-              buttonText="Chuyển đến nghệ sĩ"
+            <BS_MoveToArtist
+              selectedItem={selectedItem}
+              handleDismissModalPress={handleDismissModalPress}
             />
-            <ButtonBottomSheet
-              onPress={handleSharePress}
-              buttonIcon={Share2}
-              buttonText="Chia sẻ"
+            <BS_Share
+              selectedItem={selectedItem}
+              handleDismissModalPress={handleDismissModalPress}
             />
           </VStack>
         </MyBottomSheet>
+        <ShareModal
+          isVisible={showModal}
+          onClose={() => setShowModal(false)}
+          title={selectedItem?.title ?? ""}
+          artist={selectedItem?.artist ?? ""}
+          url={selectedItem?.url ?? ""}
+          image={selectedItem?.artwork}
+        />
         <Box className="h-28" />
       </ScrollView>
     </SafeAreaView>

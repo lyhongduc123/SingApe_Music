@@ -16,7 +16,7 @@ import { MyPlaylist, MyTrack } from "@/types/zing.types";
 import Animated, { LinearTransition, SlideOutLeft } from "react-native-reanimated";
 import { P } from "ts-pattern";
 import { unknownTrackImageSource } from "@/constants/image";
-import { updatePlaylist } from "@/services/fileService";
+import { updatePlaylist } from "@/services/cacheService";
 import { stat } from "react-native-fs";
 
 export default function editPlaylist() {

@@ -2,6 +2,7 @@ import { useAuth } from "@/context/auth";
 import { supabase } from "@/lib/supabase";
 import { Redirect, router } from "expo-router";
 import React from "react";
+import { sendTestNotification } from "../services/pushNotificationService";
 
 const App = () => {
   const { setSession, setUser } = useAuth();
@@ -35,6 +36,10 @@ const App = () => {
     return () => {
       subscription.unsubscribe();
     };
+  }, []);
+
+  React.useEffect(() => {
+    sendTestNotification();
   }, []);
 
   return null;

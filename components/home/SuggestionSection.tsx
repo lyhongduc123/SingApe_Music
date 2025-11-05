@@ -25,7 +25,7 @@ const SuggestionSection = ({ onPressSong }: SuggestionSectionProps) => {
         .limit(10);
 
       if (error) {
-        console.error("Lỗi khi fetch songs từ Supabase:", error.message);
+        console.log("Lỗi khi fetch songs từ Supabase:", error.message);
       } else if (data) {
         setSuggestedSongs(data as Track[]);
       }

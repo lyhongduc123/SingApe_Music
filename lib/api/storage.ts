@@ -10,7 +10,7 @@ export const getSongMp3Url = async (songId: string): Promise<string | null> => {
       });
 
     if (fileError || !fileData || fileData.length === 0) {
-      console.error(
+      console.log(
         "File not found in storage:",
         fileError || "No matching files"
       );
@@ -23,7 +23,7 @@ export const getSongMp3Url = async (songId: string): Promise<string | null> => {
         });
 
       if (fileError2 || !fileData2 || fileData2.length === 0) {
-        console.error(
+        console.log(
           "File not found in storage (second attempt):",
           fileError2 || "No matching files"
         );
@@ -45,13 +45,13 @@ export const getSongMp3Url = async (songId: string): Promise<string | null> => {
       .createSignedUrl(`${songId}.mp3`, 3600); // 1 hour expiry
 
     if (error) {
-      console.error("Error creating signed URL:", error);
+      console.log("Error creating signed URL:", error);
       return null;
     }
 
     return data?.signedUrl ?? null;
   } catch (error) {
-    console.error("Error in getSongMp3Url:", error);
+    console.log("Error in getSongMp3Url:", error);
     return null;
   }
 };

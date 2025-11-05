@@ -28,6 +28,7 @@ export interface Playlist {
         items: ExtendedTrack[];
     }
     artists: Artist[];
+    userName: string;
 }
 
 export interface ExtendedTrack {

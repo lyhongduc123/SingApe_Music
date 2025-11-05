@@ -11,10 +11,9 @@ export async function getMusicInfo(uri: string) {
       picture: true,
     });
 
-    
     return info;
   } catch (error) {
-    console.error("Error getting music info:", error);
+    console.log("Error getting music info:", error);
     throw error;
   }
 }

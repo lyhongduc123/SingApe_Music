@@ -46,7 +46,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { set } from "ts-pattern/dist/patterns";
 import { Heading } from "@/components/ui/heading";
-import { saveRecentSearch } from "@/services/fileService";
+import { saveRecentSearch } from "@/services/cacheService";
 import e from "express";
 
 type MixedSearchItem = any & {

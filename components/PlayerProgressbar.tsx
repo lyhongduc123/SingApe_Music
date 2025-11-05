@@ -6,6 +6,8 @@ import { useSharedValue } from "react-native-reanimated";
 import TrackPlayer, { useProgress } from "react-native-track-player";
 import clsx from "clsx";
 import { StyleProp, ViewStyle } from "react-native";
+import { Pressable } from "react-native-gesture-handler";
+import { useState } from "react";
 
 interface PlayerProgressBarProps {
   className?: string;
@@ -17,6 +19,7 @@ export const PlayerProgressBar = ({
   style,
 }: PlayerProgressBarProps) => {
   const { duration, position } = useProgress(250);
+  const [remainTimeMode, setRemainTimeMode] = useState(false);
 
   const isSliding = useSharedValue(false);
   const progress = useSharedValue(0);
@@ -25,6 +28,7 @@ export const PlayerProgressBar = ({
 
   const trackElapsedTime = formatSecondsToMinutes(position);
   const trackRemainingTime = formatSecondsToMinutes(duration - position);
+  const trackDuration = formatSecondsToMinutes(duration);
 
   if (!isSliding.value) {
     progress.value = duration > 0 ? position / duration : 0;
@@ -37,7 +41,7 @@ export const PlayerProgressBar = ({
         minimumValue={min}
         maximumValue={max}
         containerStyle={{ width: "100%" }}
-        thumbWidth={0}
+        thumbWidth={10}
         renderBubble={() => null}
         theme={{
           minimumTrackTintColor: colors.minimumTrackTintColor,
@@ -58,9 +62,11 @@ export const PlayerProgressBar = ({
         <Text className="text-[12px] font-medium opacity-75 text-white tracking-[0.7px]">
           {trackElapsedTime}
         </Text>
-        <Text className="text-[12px] font-medium opacity-75 text-white tracking-[0.7px] ">
-          - {trackRemainingTime}
-        </Text>
+        <Pressable onPress={() => setRemainTimeMode(!remainTimeMode)}>
+          <Text className="text-[12px] font-medium opacity-75 text-white tracking-[0.7px] ">
+            {remainTimeMode ? `- ${trackRemainingTime}` : trackDuration}
+          </Text>
+        </Pressable>
       </Box>
     </Box>
   );

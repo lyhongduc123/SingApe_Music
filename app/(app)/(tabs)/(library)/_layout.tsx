@@ -4,7 +4,7 @@ export default function LibraryLayout() {
   return (
     <Stack>
       <Stack.Screen
-        name="library"
+        name="index"
         options={{
           headerShown: false,
         }}

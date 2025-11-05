@@ -10,7 +10,7 @@ if (Platform.OS !== "web") {
     const imageColors = require("react-native-image-colors");
     getColors = imageColors.getColors;
   } catch (error) {
-    console.error("Không thể import react-native-image-colors:", error);
+    console.log("Không thể import react-native-image-colors:", error);
   }
 }
 

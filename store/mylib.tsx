@@ -1,5 +1,5 @@
-import { deletePlaylist } from "@/services/fileService";
-import { MyPlaylist, MyTrack } from "@/types/zing.types";
+import { deletePlaylist } from "@/services/cacheService";
+import { Artist, MyPlaylist, MyTrack } from "@/types/zing.types";
 import { create } from "zustand";
 
 interface LibraryState {
@@ -20,9 +20,28 @@ interface LibraryState {
   deletePlaylist: (playlistId: string) => void;
 
   // History actions
+  setHistory: (tracks: MyTrack[]) => void;
   addTrackToHistory: (track: MyTrack) => void;
   removeTrackFromHistory: (trackId: string) => void;
   clearHistory: () => void;
+}
+
+interface FollowState {
+  following: Artist[];
+
+  setFollowing: (artists: Artist[]) => void;
+  addArtistToFollowing: (artist: Artist) => void;
+  removeArtistFromFollowing: (artistId: string) => void;
+  isArtistFollowing: (artistId: string) => boolean;
+}
+
+interface FavoriteState {
+  favorites: MyTrack[];
+
+  setFavorites: (tracks: MyTrack[]) => void;
+  addTrackToFavorites: (track: MyTrack) => void;
+  removeTrackFromFavorites: (trackId: string) => void;
+  isTrackFavorite: (trackId: string) => boolean;
 }
 
 export const useLibraryStore = create<LibraryState>()((set, get) => ({
@@ -82,6 +101,14 @@ export const useLibraryStore = create<LibraryState>()((set, get) => ({
       ),
     })),
 
+
+
+  setHistory: (tracks: MyTrack[]) => {
+    set({
+      history: tracks
+    });
+  },
+
   addTrackToHistory: (track: MyTrack) => {
     const filteredHistory = get().history.filter((t) => t.id !== track.id);
     set({
@@ -98,4 +125,52 @@ export const useLibraryStore = create<LibraryState>()((set, get) => ({
     set(() => ({
       history: [],
     })),
+}));
+
+export const useFavoriteStore = create<FavoriteState>()((set, get) => ({
+  favorites: [],
+
+  setFavorites: (tracks: MyTrack[]) => {
+    set({ favorites: tracks });
+  },
+
+  addTrackToFavorites: (track: MyTrack) => {
+    set((state) => ({
+      favorites: [...state.favorites, track],
+    }));
+  },
+
+  removeTrackFromFavorites: (trackId: string) =>
+    set((state) => ({
+      favorites: state.favorites.filter((track) => track.id !== trackId),
+    })),
+  
+  isTrackFavorite: (trackId: string) => {
+    return get().favorites.some((track) => track.id === trackId);
+  }
+}));
+
+export const useFollowStore = create<FollowState>()((set, get) => ({
+  following: [],
+
+  setFollowing: (artists: Artist[]) => {
+    set({ following: artists });
+  },
+
+  addArtistToFollowing: (artist: Artist) => {
+    set((state) => ({
+      following: [...state.following, artist],
+    }));
+  },
+
+  removeArtistFromFollowing: (artistId: string) =>
+    set((state) => ({
+      following: state.following.filter((artist) => artist.id !== artistId),
+    })),
+  
+  isArtistFollowing: (artistId: string) => {
+    return get().following.some((artist) => 
+      artist.id === artistId
+    );
+  }
 }));

@@ -7,7 +7,7 @@ import { useAuth } from "@/context/auth";
 import {
   createPlaylist,
   createPlaylistWithTracks,
-} from "@/services/fileService";
+} from "@/services/cacheService";
 import { MyTrack } from "@/types/zing.types";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
@@ -25,7 +25,7 @@ export default function createPlaylistScreen() {
           user?.user_metadata.display_name,
           playlistName,
           playlistName,
-          unknownTrackImageSource,
+          "",
           "Danh sách phát của " + user?.user_metadata.display_name
         );
       } else {
@@ -33,7 +33,7 @@ export default function createPlaylistScreen() {
         user?.user_metadata.display_name,
         playlistName,
         playlistName,
-        unknownTrackImageSource,
+        "",
         "Danh sách phát của " + user?.user_metadata.display_name,
         [item]
       );

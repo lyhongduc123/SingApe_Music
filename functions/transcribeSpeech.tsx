@@ -13,7 +13,7 @@ const getServerUrl = () => {
       return "http://10.0.2.2:4000";
     }
     // For Android device
-    return "http://192.168.1.13:4000";
+    return "http://192.168.1.11:4000";
   }
   // For iOS and web
   return "http://localhost:4000";
@@ -26,7 +26,7 @@ export const transcribeSpeech = async (
   console.log("🎧 Recording status before stop:", status);
 
   if (!status?.isRecording) {
-    console.error("❌ No recording in progress. Cannot stop.");
+    console.log("❌ No recording in progress. Cannot stop.");
     return;
   }
 
@@ -101,25 +101,25 @@ export const transcribeSpeech = async (
           if (results) {
             const transcript = results?.[0].alternatives?.[0].transcript;
             if (!transcript) {
-              console.error("No transcript found in results");
+              console.log("No transcript found in results");
               return undefined;
             }
             return transcript;
           } else {
-            console.error("No results found in server response");
+            console.log("No results found in server response");
             return undefined;
           }
         } catch (error) {
-          console.error("Error calling speech-to-text API:", error);
+          console.log("Error calling speech-to-text API:", error);
           return undefined;
         }
       }
     } else {
-      console.error("Recording must be prepared prior to unloading");
+      console.log("Recording must be prepared prior to unloading");
       return undefined;
     }
   } catch (e) {
-    console.error("Failed to transcribe speech!", e);
+    console.log("Failed to transcribe speech!", e);
     return undefined;
   }
 };

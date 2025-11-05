@@ -1,5 +1,5 @@
 import { Artist, MyTrack } from "@/types/zing.types";
-import { FlatListProps, View } from "react-native";
+import { Alert, FlatListProps, View } from "react-native";
 import { Button, HStack, Image, VStack, Text, Box } from "../ui";
 import { ButtonIcon, ButtonText } from "../ui/button";
 import {
@@ -19,6 +19,8 @@ import { Divider } from "../ui/divider";
 import ButtonBottomSheet from "../bottomSheet/ButtonBottomSheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { Pressable } from "react-native-gesture-handler";
+import { ShareModal } from "../ShareModal";
+import { downloadSong } from "../DowloadMusic";
 
 export type MixedSearchItem = any & {
   type: "song" | "artist" | "playlist" | "album";
@@ -45,6 +47,7 @@ export const MixedItem = ({
   const [selectedItem, setSelectedItem] = useState<MixedSearchItem | null>(
     null
   );
+  const [showModal, setShowModal] = useState(false);
 
   const ref = useRef<BottomSheetModal>(null);
   const handlePresentModalPress = () => {
@@ -70,6 +73,13 @@ export const MixedItem = ({
     console.log("Favorite:", selectedItem);
   };
   const handleDownloadPress = () => {
+    const result = downloadSong(
+      selectedItem?.url ?? "",
+      selectedItem?.title ?? "" + ".mp3"
+    );
+    if (result !== null) {
+      Alert.alert("Tải thành công", "Nhạc đã được tải về.");
+    }
     console.log("Download:", selectedItem);
   };
   const handleArtistPress = () => {
@@ -77,6 +87,7 @@ export const MixedItem = ({
   };
   const handleSharePress = () => {
     console.log("Share:", selectedItem);
+    setShowModal(true);
   };
   const handleAddToNowPlayingPress = () => {};
 
@@ -142,15 +153,15 @@ export const MixedItem = ({
           onSelectArtist(newItem);
         }}
       >
-        <HStack space="lg" className="px-2 items-center">
+        <HStack space="lg" className="pl-2 pr-3 items-center">
           <Image
             source={newItem.thumbnailM}
             className="rounded-full"
             size="sm"
             alt={newItem.name || "Unknown"}
           />
-          <HStack space="md" className="flex-1 justify-between items-center">
-            <VStack space="xs">
+          <HStack className="flex-1 justify-between items-center">
+            <VStack space="xs" className="flex-1">
               <Text className="text-base font-semibold text-black dark:text-white">
                 {newItem.name}
               </Text>
@@ -222,7 +233,7 @@ export const MixedItem = ({
   };
 
   return (
-    <>
+    <View>
       {renderItem()}
       <MyBottomSheet bottomSheetRef={ref}>
         <HStack space="md">
@@ -282,7 +293,15 @@ export const MixedItem = ({
             buttonText="Chia sẻ"
           />
         </VStack>
+        <ShareModal
+          isVisible={showModal}
+          onClose={() => setShowModal(false)}
+          title={selectedItem?.title ?? ""}
+          artist={selectedItem?.artist ?? ""}
+          url={selectedItem?.url ?? ""}
+          image={selectedItem?.artwork}
+        />
       </MyBottomSheet>
-    </>
+    </View>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { ScrollView } from "react-native";
 import { Box, Text, VStack, HStack } from "@/components/ui";
 import { fetchLyric } from "@/lib/spotify";
@@ -98,40 +98,19 @@ const parseLyrics = (lyricText: string): Sentence[] => {
   return sentences;
 };
 
-export const KaraokeMode: React.FC = () => {
-  const [lyrics, setLyrics] = useState<Sentence[]>([]);
+interface KaraokeModeProps {
+  lyricText: string;
+}
+export const KaraokeMode: React.FC<KaraokeModeProps> = ({ lyricText }) => {
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const activeTrack = useActiveTrack();
   const scrollViewRef = useRef<ScrollView>(null);
   const progress = useProgress();
 
-  useEffect(() => {
-    const loadLyrics = async () => {
-      if (activeTrack?.id) {
-        setIsLoading(true);
-        try {
-          const lyricData = await fetchLyric(activeTrack.id);
-          // console.log("lyricData", lyricData);
-
-          if (lyricData?.file) {
-            const response = await fetch(lyricData.file);
-            const lyricText = await response.text();
-            const parsedLyrics = parseLyrics(lyricText);
-            setLyrics(parsedLyrics);
-          } else {
-            setLyrics([]);
-          }
-        } catch (error) {
-          console.error("Error loading lyrics:", error);
-          setLyrics([]);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-    loadLyrics();
-  }, [activeTrack?.id]);
+  const lyrics = useMemo(() => parseLyrics(lyricText), [lyricText]);
+  console.log("length", lyrics.length);
+  console.log("isloading", isLoading);
 
   useEffect(() => {
     const positionMs = progress.position * 1000 + 550;

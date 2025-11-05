@@ -31,7 +31,7 @@ const AudioQualitySwitcher: React.FC<Props> = ({ qualities }) => {
       //   await TrackPlayer.play();
       setCurrentIndex(nextIndex);
     } catch (error) {
-      console.error("Lỗi khi đổi chất lượng:", error);
+      console.log("Lỗi khi đổi chất lượng:", error);
     }
   };
 

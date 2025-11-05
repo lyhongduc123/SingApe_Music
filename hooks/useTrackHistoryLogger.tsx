@@ -1,4 +1,4 @@
-import { saveListeningHistory } from "@/services/fileService";
+import { saveListeningHistory } from "@/services/cacheService";
 import { useTrackPlayerEvents, Event } from "react-native-track-player";
 
 export function useTrackHistoryLogger() {

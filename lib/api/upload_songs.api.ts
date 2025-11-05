@@ -24,7 +24,7 @@ export const getUserUploadedSongs = async (): Promise<UploadSong[]> => {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      console.error("User not authenticated:", userError);
+      console.log("User not authenticated:", userError);
       return [];
     }
 
@@ -36,13 +36,13 @@ export const getUserUploadedSongs = async (): Promise<UploadSong[]> => {
       .order("upload_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching uploaded songs:", error);
+      console.log("Error fetching uploaded songs:", error);
       return [];
     }
 
     return data as UploadSong[];
   } catch (err) {
-    console.error("Error in getUserUploadedSongs:", err);
+    console.log("Error in getUserUploadedSongs:", err);
     return [];
   }
 };
@@ -64,7 +64,7 @@ export const deleteUploadedSong = async (
       .single();
 
     if (fetchError || !song) {
-      console.error("Error fetching song:", fetchError);
+      console.log("Error fetching song:", fetchError);
       return { success: false, error: fetchError };
     }
 
@@ -78,7 +78,7 @@ export const deleteUploadedSong = async (
       .remove([filePath]);
 
     if (storageError) {
-      console.error("Error deleting file from storage:", storageError);
+      console.log("Error deleting file from storage:", storageError);
       // Continue anyway to delete the database entry
     }
 
@@ -89,13 +89,13 @@ export const deleteUploadedSong = async (
       .eq("id", songId);
 
     if (deleteError) {
-      console.error("Error deleting song record:", deleteError);
+      console.log("Error deleting song record:", deleteError);
       return { success: false, error: deleteError };
     }
 
     return { success: true };
   } catch (err) {
-    console.error("Error in deleteUploadedSong:", err);
+    console.log("Error in deleteUploadedSong:", err);
     return { success: false, error: err };
   }
 };

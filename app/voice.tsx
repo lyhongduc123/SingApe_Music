@@ -77,7 +77,7 @@ export default function Voice() {
         setIsPlaying(false);
       }
     } catch (e) {
-      console.error("Error in voice recognition:", e);
+      console.log("Error in voice recognition:", e);
       setTranscribedSpeech(
         "Đã xảy ra lỗi. Vui lòng kiểm tra kết nối mạng và thử lại."
       );

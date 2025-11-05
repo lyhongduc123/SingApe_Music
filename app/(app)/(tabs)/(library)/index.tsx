@@ -20,7 +20,7 @@ import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { unknownTrackImageSource } from "@/constants/image";
 import { fontSize, textColor } from "@/constants/tokens";
-import { deletePlaylist, listPlaylists } from "@/services/fileService";
+import { deletePlaylist, listPlaylists } from "@/services/cacheService";
 import { playTrack } from "@/services/playbackService";
 import { useLibraryStore } from "@/store/mylib";
 import { MyPlaylist, MyTrack } from "@/types/zing.types";
@@ -52,13 +52,14 @@ import {
   useRef,
   useState,
 } from "react";
-import { ScrollView, FlatList } from "react-native";
+import { ScrollView, FlatList, Alert } from "react-native";
 import { stat } from "react-native-fs";
 import Animated, { FadeIn, LinearTransition } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { downloadSong } from "@/components/DowloadMusic";
 
 export default function Library() {
-  const [data, setData] = useState<MyTrack[]>([]);
+  const [data, setData] = useState<MyPlaylist[]>([]);
   const [uploadedSongs, setUploadedSongs] = useState<UploadSong[]>([]);
   const [selectedItem, setSelectedItem] = useState<MyTrack | UploadSong | null>(
     null
@@ -174,7 +175,7 @@ export default function Library() {
           }));
 
           // Now it matches the MyPlaylist[] type
-          store.setPlaylists(playlistItems);
+          store.setPlaylists(playlists);
         } catch (error) {
           console.error("Error fetching playlists:", error);
         } finally {
@@ -261,7 +262,7 @@ export default function Library() {
                 <ButtonText className="text-secondary-50">Yêu thích</ButtonText>
               </Button>
               <Button
-                onPress={handleFavorite}
+                onPress={handleFollow}
                 variant="solid"
                 className="rounded-lg justify-start bg-yellow-400 dark:bg-yellow-400 data-[active=true]:bg-yellow-500 w-1/2 h-14"
                 size="xl"
@@ -290,9 +291,13 @@ export default function Library() {
                   as={ArrowBigDownDash}
                   className="text-black fill-black"
                 />
-                <ButtonText>Tải xuống</ButtonText>
+                <ButtonText
+                  >
+                  Tải xuống
+                </ButtonText>
               </Button>
             </HStack>
+            <View className="h-2" />
             <HStack className="items-center gap-2">
               <Heading className="text-2xl font-bold">Danh sách phát</Heading>
               <Pressable
@@ -318,13 +323,14 @@ export default function Library() {
                 >
                   <PlaylistCard
                     item={item}
+                    tracks={item.tracks}
                     type="Danh sách phát"
                     onOptionPress={() => handleOnOptionsPress(item)}
                   />
                 </Pressable>
               )}
               ItemSeparatorComponent={() => <View className="h-3" />}
-              ListFooterComponent={() => <View className="h-28" />}
+              ListFooterComponent={() => <View className="h-3" />}
               scrollEnabled={false}
               showsVerticalScrollIndicator={false}
               showsHorizontalScrollIndicator={false}
@@ -353,10 +359,10 @@ export default function Library() {
               </Box>
             ) : uploadedSongs.length === 0 ? (
               <Box className="h-20 items-center justify-center">
-                <Text className="text-secondary-400">
+                <Text className="text-primary-500">
                   Bạn chưa tải lên bài hát nào
                 </Text>
-                <Text className="text-secondary-400 mt-1">
+                <Text className="text-primary-500 mt-1">
                   Nhấn vào dấu + để tải lên bài hát
                 </Text>
               </Box>
@@ -364,7 +370,7 @@ export default function Library() {
               <Animated.FlatList
                 data={uploadedSongs}
                 keyExtractor={(item) => item.id.toString()}
-                layout={LinearTransition}
+                itemLayoutAnimation={LinearTransition}
                 renderItem={({ item }) => (
                   <UploadedSongCard
                     song={item}
@@ -403,6 +409,7 @@ export default function Library() {
             )}
           </VStack>
         </Box>
+        <View className="h-28" />
       </ScrollView>
       <MyBottomSheet bottomSheetRef={bottomSheetRef}>
         {selectedItem && "url" in selectedItem ? (

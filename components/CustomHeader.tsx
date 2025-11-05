@@ -54,7 +54,7 @@ export default function CustomHeader({
         ): null}
 
       {/* Title */}
-      <View className={clsx('flex-1', centerTitle && 'items-center')}>
+      <View className={clsx('flex-1', centerTitle && 'items-center absolute left-0 w-full')}>
         {!!title && <Heading className={clsx(titleClassName)}>{title}</Heading>}
       </View>
 

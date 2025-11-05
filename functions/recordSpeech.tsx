@@ -61,16 +61,16 @@ export const recordSpeech = async (
           ?.prepareToRecordAsync(recordingOptions)
           .then(() => console.log("✅ Prepared recording instance"))
           .catch((e) => {
-            console.error("Failed to prepare recording", e);
+            console.log("Failed to prepare recording", e);
           });
       }
       await audioRecordingRef?.current?.startAsync();
     } else {
-      console.error("Permission to record audio is required!");
+      console.log("Permission to record audio is required!");
       return;
     }
   } catch (err) {
-    console.error("Failed to start recording", err);
+    console.log("Failed to start recording", err);
     return;
   }
 };

@@ -54,7 +54,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { set } from "ts-pattern/dist/patterns";
 import { Heading } from "@/components/ui/heading";
-import { getRecentSearch, saveRecentSearch } from "@/services/fileService";
+import { getRecentSearch, saveRecentSearch } from "@/services/cacheService";
 import e from "express";
 import { SearchList } from "@/components/searchs/SearchList";
 import { RecentList } from "@/components/searchs/RecentList";
@@ -70,7 +70,7 @@ export default function SearchScreen() {
   const [data, setData] = useState<MixedSearchItem[]>();
   const [dataSlice, setDataSlice] = useState<MixedSearchItem[]>();
   const [recentData, setRecentData] = useState<MixedSearchItem[]>();
-  const debounceQuery = useDebounce(query, 100);
+  const debounceQuery = useDebounce(query, 0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -154,11 +154,11 @@ export default function SearchScreen() {
     addRecentSearchEntry(playlist);
     router.push({
       pathname: "/playlists/[id]",
-      params: { 
+      params: {
         id: playlist.id,
         title: playlist.title,
         artwork: playlist.thumbnail,
-        createdBy: playlist.createdBy ?? "Singape"
+        createdBy: playlist.createdBy ?? "Singape",
       },
     });
   };

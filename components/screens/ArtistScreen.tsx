@@ -52,7 +52,7 @@ import {
   useActiveTrack,
   useIsPlaying,
 } from "react-native-track-player";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getGradientColor, getImageColor } from "@/helpers/color";
 import {
   unknownArtistImageSource,
@@ -78,10 +78,19 @@ import { ArtistList } from "../ArtistList";
 import { LoadingOverlay } from "../LoadingOverlay";
 import { formatNumber } from "@/helpers/format";
 import { useFloatingPlayerVisible } from "@/hooks/useFloatingPlayerVisible";
+import { BS_AddToPlaylist } from "../buttons/BS_AddToPlaylist";
+import { BS_AddToFavorite } from "../buttons/BS_AddToFavorite";
+import { BS_Download } from "../buttons/BS_Download";
+import { BS_MoveToArtist } from "../buttons/BS_MoveToArtist";
+import { BS_Share } from "../buttons/BS_Share";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useFollowStore } from "@/store/mylib";
+import { addFollowArtist, removeFollowArtist } from "@/services/cacheService";
 
 interface ArtistProps {
   id?: string;
   name?: string;
+  alias?: string;
   description?: string;
   imageUrl?: string;
   data?: ArtistResult;
@@ -100,6 +109,7 @@ export const ArtistScreen = ({
   id,
   name,
   description,
+  alias,
   imageUrl,
   data,
   gradientColor,
@@ -107,12 +117,12 @@ export const ArtistScreen = ({
   onTrackPress,
   onPlayPress,
   onShufflePress,
-  onAddToPlaylistPress,
   onOptionPress,
-  onPlusPress,
-  onEditPress,
 }: ArtistProps) => {
-  const [selectedItem, setSelectedItem] = useState<Track | null>(null);
+  const followStore = useFollowStore();
+  const { user } = useAuth();
+
+  const [selectedItem, setSelectedItem] = useState<MyTrack | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [followed, setFollowed] = useState(false);
@@ -120,6 +130,7 @@ export const ArtistScreen = ({
   const { visible } = useFloatingPlayerVisible();
   const [showAllTracks, setShowAllTracks] = useState<boolean>(false);
 
+  const debouncedFollow = useDebounce(followed, 2000);
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue<number>(0);
   const colorScheme = useColorScheme();
@@ -172,7 +183,57 @@ export const ArtistScreen = ({
     bottomSheetRef.current?.dismiss();
   }, []);
 
-  const handleTrackOptionPress = (track: Track) => {
+  useEffect(() => {
+    if (data) {
+      const isFollowed = followStore.isArtistFollowing(id || "");
+      console.log("Is artist followed:", isFollowed);
+      setFollowed(isFollowed);
+    }
+  }, []);
+
+  useEffect(() => {
+    const updateFollow = async () => {
+      try {
+        if (debouncedFollow) {
+          const artist: Artist = {
+            id: id || "",
+            encodeId: id || "",
+            name: name || "",
+            thumbnail: imageUrl || "",
+            thumbnailM: imageUrl || "",
+            totalFollow: data?.totalFollow || 0,
+            isOA: true,
+            link: "",
+            spotlight: "false",
+            alias: alias || "",
+            playlistId: "",
+          };
+          console.log("Adding artist to following:", artist);
+          followStore.addArtistToFollowing(artist);
+          if (user?.id) {
+            console.log("User ID:", user.id);
+            await addFollowArtist(user.id, artist);
+          } else {
+            console.log("User ID is undefined");
+          }
+        } else {
+          followStore.removeArtistFromFollowing(id || "");
+          if (user?.id) {
+            console.log("Removing artist from following:", id);
+            await removeFollowArtist(user.id, id || "");
+          } else {
+            console.log("User ID is undefined");
+          }
+        }
+      } catch (e) {
+        console.log("Failed to update follow state", e);
+      }
+    };
+
+    updateFollow();
+  }, [debouncedFollow]);
+
+  const handleTrackOptionPress = (track: MyTrack) => {
     setSelectedItem(track);
     handlePresentModalPress();
   };
@@ -185,18 +246,6 @@ export const ArtistScreen = ({
         isFavorite: !selectedItem?.isFavorite,
       });
     }
-  };
-  const handleDownloadPress = () => {
-    // Handle download action
-  };
-  const handleRemoveFromPlaylistPress = () => {
-    // Handle remove from playlist action
-  };
-  const handleArtistPress = () => {
-    // Handle artist action
-  };
-  const handleSharePress = () => {
-    // Handle share action
   };
 
   const onFollowPress = () => {
@@ -447,37 +496,25 @@ export const ArtistScreen = ({
             <Divider />
           </Box>
           <VStack space="md" className="w-full">
-            <ButtonBottomSheet
-              onPress={handleAddToPlaylistPress}
-              buttonIcon={CirclePlus}
-              buttonText="Thêm vào danh sách phát"
+            <BS_AddToPlaylist
+              selectedItem={selectedItem}
+              handleDismissModalPress={handleDismissModalPress}
             />
-            <ButtonBottomSheet
-              onPress={handleFavoritePress}
-              stateChangable={true}
-              fillIcon={selectedItem?.isFavorite}
-              buttonIcon={Heart}
-              buttonText="Thêm vào yêu thích"
+            <BS_AddToFavorite
+              selectedItem={selectedItem}
+              handleDismissModalPress={handleDismissModalPress}
             />
-            <ButtonBottomSheet
-              onPress={handleDownloadPress}
-              buttonIcon={CircleArrowDown}
-              buttonText="Tải xuống"
+            <BS_Download
+              selectedItem={selectedItem}
+              handleDismissModalPress={handleDismissModalPress}
             />
-            <ButtonBottomSheet
-              onPress={handleRemoveFromPlaylistPress}
-              buttonIcon={CircleX}
-              buttonText="Xóa khỏi danh sách phát"
+            <BS_MoveToArtist
+              selectedItem={selectedItem}
+              handleDismissModalPress={handleDismissModalPress}
             />
-            <ButtonBottomSheet
-              onPress={handleArtistPress}
-              buttonIcon={CircleUserRound}
-              buttonText="Chuyển đến nghệ sĩ"
-            />
-            <ButtonBottomSheet
-              onPress={handleSharePress}
-              buttonIcon={Share2}
-              buttonText="Chia sẻ"
+            <BS_Share
+              selectedItem={selectedItem}
+              handleDismissModalPress={handleDismissModalPress}
             />
           </VStack>
         </MyBottomSheet>

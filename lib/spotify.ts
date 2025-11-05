@@ -35,10 +35,10 @@ import { supabase } from "./supabase";
 
 // const KOYEB_API_URL = "http://192.168.0.101:8080/"; // Replace with your Koyeb API URL
 // =======
-const KOYEB_API_URL =
-  "https://yielding-leia-vietnam-national-university-83340bf5.koyeb.app/";
+// const KOYEB_API_URL =
+//   "https://yielding-leia-vietnam-national-university-83340bf5.koyeb.app/";
 
-// const KOYEB_API_URL = "http://192.168.1.2:25565/";
+const KOYEB_API_URL = "http://192.168.1.11:8080/";
 
 export const getSpotifyToken = async () => {
   const response = await fetch(`${KOYEB_API_URL}spotify-token`);
@@ -75,13 +75,13 @@ export const fetchHome = async () => {
 export const fetchSong = async (encodeId: string) => {
   try {
     const response = await fetch(
-      "http://192.168.1.13:8080/" + "zingmp3/song/" + encodeId
+      "http://192.168.1.11:8080/" + "zingmp3/song/" + encodeId
     );
     const data = await response.json();
     // console.log("data", data);
     return data.data["128"];
   } catch (error) {
-    console.error("Error fetching song URL:", error);
+    console.log("Error fetching song URL:", error);
     throw error;
   }
 };
@@ -94,7 +94,7 @@ export const fetchPlaylist = async (encodeId: string) => {
     const data = await response.json();
     return data.data;
   } catch (error) {
-    console.error("Error fetching playlist:", error);
+    console.log("Error fetching playlist:", error);
     throw error;
   }
 };
@@ -105,7 +105,7 @@ export const fetchArtist = async (encodeId: string) => {
     const data = await response.json();
     return data.data;
   } catch (error) {
-    console.error("Error fetching artist:", error);
+    console.log("Error fetching artist:", error);
     throw error;
   }
 };

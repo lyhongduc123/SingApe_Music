@@ -28,8 +28,9 @@ const setupPlayer = async () => {
       Capability.Stop,
     ],
     android: {
-      appKilledPlaybackBehavior: AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification
-    }
+      appKilledPlaybackBehavior:
+        AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
+    },
   });
 
   await TrackPlayer.setVolume(0.3);
@@ -49,7 +50,7 @@ export const useSetupTrackPlayer = ({ onLoad }: { onLoad?: () => void }) => {
       })
       .catch((error) => {
         isInitialized.current = false;
-        console.error(error);
+        console.log(error);
       });
   }, [onLoad]);
 };

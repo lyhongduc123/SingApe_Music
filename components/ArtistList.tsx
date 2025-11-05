@@ -2,7 +2,7 @@ import { Artist } from "@/types/zing.types";
 import { FlatList, View } from "react-native";
 import { ArtistListItem } from "./ArtistListItem";
 
-interface ArtistProps {
+interface ArtistProps extends Partial<FlatList<Artist>> {
   horizontal?: boolean;
   data: Artist[];
 }

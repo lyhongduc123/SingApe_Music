@@ -3,9 +3,11 @@ import { Pressable } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AddToPlaylistModal } from "./AddToPlaylistModal";
 import { TrackWithPlaylist } from "@/helpers/types";
+import { router } from "expo-router";
+import { MyTrack } from "@/types/zing.types";
 
 type Props = {
-  track: TrackWithPlaylist;
+  track: MyTrack;
   iconColor?: string;
   iconSize?: number;
 };
@@ -19,18 +21,24 @@ export const AddToPlaylistButton = ({
 
   return (
     <>
-      <Pressable onPress={() => setIsModalOpen(true)}>
+      <Pressable onPress={() => {
+        router.push({
+          pathname: "/addToPlaylist",
+          params: track,
+        })
+      }
+      }>
         <MaterialCommunityIcons
           name="music-note-plus"
           size={iconSize}
           color={iconColor}
         />
       </Pressable>
-      <AddToPlaylistModal
+      {/* <AddToPlaylistModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         track={track}
-      />
+      /> */}
     </>
   );
 };

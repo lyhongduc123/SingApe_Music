@@ -14,7 +14,7 @@ export const PlayerShuffleToggle = ({
     const currentQueue = await TrackPlayer.getQueue();
     const currentTrackIndex = await TrackPlayer.getCurrentTrack();
     if (currentTrackIndex === null) {
-      console.error("No current track index found");
+      console.log("No current track index found");
       return;
     }
     const currentTrack = currentQueue[currentTrackIndex];

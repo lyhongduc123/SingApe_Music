@@ -6,6 +6,7 @@ import {
   Touchable,
   View,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -31,6 +32,7 @@ import { backgroundColor } from "@/constants/tokens";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { MyTrack } from "@/types/zing.types";
 import { playTrack } from "@/services/playbackService";
+import { downloadSong } from "@/components/DowloadMusic";
 
 export default function Download() {
   const [isLoading, setIsLoading] = useState(false);
@@ -186,7 +188,20 @@ const TrackBottomSheet = ({ ...props }: TrackBottomSheetProps) => {
               size="xxl"
               className="text-primary-500"
             />
-            <ButtonText className={buttonTextStyle}>Tải xuống</ButtonText>
+            <ButtonText
+              className={buttonTextStyle}
+              onPress={() => {
+                const result = downloadSong(
+                  props.track?.url ?? "",
+                  props.track?.title ?? "" + ".mp3"
+                );
+                if (result !== null) {
+                  Alert.alert("Tải thành công", "Nhạc đã được tải về.");
+                }
+              }}
+            >
+              Tải xuống
+            </ButtonText>
           </Button>
           <Button onPress={() => {}} className={buttonStyle}>
             <ButtonIcon as={Heart} size="xxl" className="text-primary-500" />

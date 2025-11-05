@@ -115,3 +115,9 @@ export function getSafeBackgroundColor(color: string, lightMode = true): string 
   
   return color;
 }
+
+export function getMixedColor(color1: string, color2: string, amount: number): string {
+  const c1 = Color(color1);
+  const c2 = Color(color2);
+  return c1.mix(c2, amount).hex();
+}

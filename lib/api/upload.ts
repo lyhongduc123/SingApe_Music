@@ -99,7 +99,7 @@ const uploadMusic = async (callbacks?: UploadCallbacks) => {
       console.log("User cancelled picker");
       callbacks?.onError?.(new Error("Upload cancelled"));
     } else {
-      console.error("Upload failed:", err);
+      console.log("Upload failed:", err);
       callbacks?.onError?.(err);
     }
     return null;
