@@ -76,7 +76,7 @@ export default function TabsNavigation() {
           name="(songs)"
           options={{
             title: "Khám phá",
-            popToTopOnBlur: true,
+            // popToTopOnBlur: true,
             tabBarIcon: ({ color }) => <Icon as={Compass} color={color} />,
           }}
         />
@@ -84,7 +84,7 @@ export default function TabsNavigation() {
           name="(library)"
           options={{
             title: "Thư viện",
-            popToTopOnBlur: true,
+            // popToTopOnBlur: true,
             tabBarIcon: ({ color }) => <Icon as={Library} color={color} />,
           }}
         />
@@ -100,7 +100,7 @@ export default function TabsNavigation() {
           name="profile"
           options={{
             title: "Cá nhân",
-            popToTopOnBlur: true,
+            // popToTopOnBlur: true,
             tabBarIcon: ({ color }) => <Icon as={UserRound} color={color} />,
           }}
         />

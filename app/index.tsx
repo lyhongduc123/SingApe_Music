@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { useEffect } from "react";
 import { Redirect, router, useRootNavigationState } from "expo-router";
 import React from "react";
-import { sendTestNotification } from "../services/pushNotificationService";
+// import { sendTestNotification } from "../services/pushNotificationService";
 
 export default function App() {
   const { setSession, setUser } = useAuth();
@@ -36,6 +36,7 @@ export default function App() {
         router.replace("/(auth)");
       }
     });
+  
     return () => {
       subscription.unsubscribe();
     };

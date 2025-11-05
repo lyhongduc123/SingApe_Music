@@ -93,7 +93,7 @@ export const SearchList = ({
                 <ButtonText>Xem tất cả các kết quả</ButtonText>
               </Button>
             )}
-            <View className="h-20 bg-transparent" />
+            <View className="h-32 bg-transparent" />
           </>
         )}
         renderItem={({ item }) => (

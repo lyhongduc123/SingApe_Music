@@ -130,7 +130,7 @@ export const ArtistScreen = ({
   const { visible } = useFloatingPlayerVisible();
   const [showAllTracks, setShowAllTracks] = useState<boolean>(false);
 
-  const debouncedFollow = useDebounce(followed, 2000);
+  const debouncedFollow = useDebounce(followed, 1000);
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue<number>(0);
   const colorScheme = useColorScheme();
@@ -186,7 +186,6 @@ export const ArtistScreen = ({
   useEffect(() => {
     if (data) {
       const isFollowed = followStore.isArtistFollowing(id || "");
-      console.log("Is artist followed:", isFollowed);
       setFollowed(isFollowed);
     }
   }, []);

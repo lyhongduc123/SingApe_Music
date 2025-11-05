@@ -20,14 +20,14 @@ export default function EditProfile() {
 
   const handleEditProfile = () => {
     if (!name || !email) {
-      console.error("Name and email cannot be empty");
+      console.log("Name and email cannot be empty");
       return;
     }
     supabase.auth.updateUser({
       data: { display_name: name, email: email },
     }).then(({ data, error }) => {
       if (error) {
-        console.error("Error updating user:", error);
+        console.log("Error updating user:", error);
       } else {
         console.log("User updated successfully:", data);
       }
@@ -48,7 +48,7 @@ export default function EditProfile() {
       if (user) {
         setUser(user);
       } else {
-        console.error("Failed to retrieve user");
+        console.log("Failed to retrieve user");
       }
     });
     

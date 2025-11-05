@@ -13,7 +13,7 @@ const getServerUrl = () => {
       return "http://10.0.2.2:4000";
     }
     // For Android device
-    return "http://192.168.1.11:4000";
+    return "http://192.168.1.2:4000";
   }
   // For iOS and web
   return "http://localhost:4000";

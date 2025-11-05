@@ -51,10 +51,6 @@ export default function History() {
     const fetchTracks = async () => {
       setIsLoading(true);
       try {
-        if (historyStore.length > 0) {
-          return;
-        }
-
         const history = await getListeningHistory();
         const track = history.map((item) => {
           return {
